@@ -1,124 +1,225 @@
-//////////////////////
-/* GLOBAL VARIABLES */
-//////////////////////
+/*global THREE, requestAnimationFrame, console*/
+
 var camera, scene, renderer;
+var cameras = [];
+var geometry, material, mesh;
 
-var geometry, material, cube;
+var ball;
 
-
-/////////////////////
-/* CREATE SCENE(S) */
-/////////////////////
-function createScene(){
+function addTableLeg(obj, x, y, z) {
     'use strict';
-      // create a scene
-      scene = new THREE.Scene();
+
+    geometry = new THREE.CubeGeometry(2, 6, 2);
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(x, y - 3, z);
+    obj.add(mesh);
 }
 
-//////////////////////
-/* CREATE CAMERA(S) */
-//////////////////////
+function addTableTop(obj, x, y, z) {
+    'use strict';
+    geometry = new THREE.CubeGeometry(60, 2, 20);
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(x, y, z);
+    obj.add(mesh);
+}
+
+function createBall(x, y, z) {
+    'use strict';
+
+    ball = new THREE.Object3D();
+    ball.userData = { jumping: true, step: 0 };
+
+    material = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
+    geometry = new THREE.SphereGeometry(4, 10, 10);
+    mesh = new THREE.Mesh(geometry, material);
+
+    ball.add(mesh);
+    ball.position.set(x, y, z);
+
+    scene.add(ball);
+}
+
+
+function createTable(x, y, z) {
+    'use strict';
+
+    var table = new THREE.Object3D();
+
+    material = new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: true });
+
+    addTableTop(table, 0, 0, 0);
+    addTableLeg(table, -25, -1, -8);
+    addTableLeg(table, -25, -1, 8);
+    addTableLeg(table, 25, -1, 8);
+    addTableLeg(table, 25, -1, -8);
+
+    scene.add(table);
+
+    table.position.x = x;
+    table.position.y = y;
+    table.position.z = z;
+}
+
+function createScene() {
+    'use strict';
+
+    scene = new THREE.Scene();
+
+
+    scene.add(new THREE.AxisHelper(10));
+
+    createTable(0, 8, 0);
+    createBall(0, 0, 15);
+}
+
+const ORTOGONAL = 0;
+const PERSPECTIVE = 1;
+
+function createCamera(type,x,y,z) {
+
+    if (type == ORTOGONAL) {
+
+        var viewSize = 50; // Ajuste esse valor para controlar a área visível
+        var aspectRatio = window.innerWidth / window.innerHeight;
+
+        var cam = new THREE.OrthographicCamera(
+            -viewSize * aspectRatio,
+            viewSize * aspectRatio,
+            viewSize,
+            -viewSize,
+            -1000,
+            1000
+        );
+
+        cam.position.set(x,y,z);
+        cam.lookAt(scene.position);
+        return cam;
+    }
+
+    if (type == PERSPECTIVE) {
+        var cam = new THREE.PerspectiveCamera(70,
+            window.innerWidth / window.innerHeight,
+            1,
+            1000);
+        cam.position.x = x;
+        cam.position.y = y;
+        cam.position.z = z;
+        cam.lookAt(scene.position);
+        return cam;
+    }
+    return -1; 
+}
+
 function createCameras() {
     'use strict';
-    // create a camera
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    
-    camera.position.z = 5;
-    camera.lookAt(0, 0, 0);
-}
 
-/////////////////////
-/* CREATE LIGHT(S) */
-/////////////////////
+    // FRONT CAMERA
+    cameras[0] = createCamera(ORTOGONAL,0,0,50);
 
-////////////////////////
-/* CREATE OBJECT3D(S) */
-////////////////////////
+    cameras[1] = createCamera(ORTOGONAL,50,0,0);
 
-//////////////////////
-/* CHECK COLLISIONS */
-//////////////////////
-function checkCollisions(){
-    'use strict';
+    cameras[2] = createCamera(ORTOGONAL,0,50,0);
+
+    cameras[3] = createCamera(ORTOGONAL,50,50,50);
+
+    cameras[4] = createCamera(PERSPECTIVE,50,50,50);
+
+    camera = cameras[0];
 
 }
 
-///////////////////////
-/* HANDLE COLLISIONS */
-///////////////////////
-function handleCollisions(){
+function onResize() {
     'use strict';
 
-}
-
-////////////
-/* UPDATE */
-////////////
-function update(){
-    'use strict';
-}
-
-/////////////
-/* DISPLAY */
-/////////////
-function render() {
-    'use strict';
-}
-
-
-////////////////////////////////
-/* INITIALIZE ANIMATION CYCLE */
-////////////////////////////////
-function init() {
-    'use strict';
-    createScene();
-    createCameras();
-
-    renderer = new THREE.WebGLRenderer();
     renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
 
-    // create a cube
-    geometry = new THREE.BoxGeometry();
-    material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-    cube = new THREE.Mesh(geometry, material);
-    scene.add(cube);
-
-    // position the camera
-    camera.position.z = 5;
+    if (window.innerHeight > 0 && window.innerWidth > 0) {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+    }
 
 }
-  
 
-/////////////////////
-/* ANIMATION CYCLE */
-/////////////////////
-function animate() {
-    'use strict';
-    requestAnimationFrame(animate);
-    cube.rotation.x += 0.01;
-    cube.rotation.y += 0.01;
-    renderer.render(scene, camera);
-}
-
-////////////////////////////
-/* RESIZE WINDOW CALLBACK */
-////////////////////////////
-function onResize() { 
-    'use strict';
-}
-
-///////////////////////
-/* KEY DOWN CALLBACK */
-///////////////////////
 function onKeyDown(e) {
     'use strict';
 
+    switch (e.keyCode) {
+        case 49: // 1
+            camera = cameras[0];
+            break;
+
+        case 50: // 2
+            camera = cameras[1];
+            break;
+        
+        case 51: // 3
+            camera = cameras[2];
+            break;
+
+        case 52: // 4
+            camera = cameras[3];
+            break;
+        
+        case 53: // 5
+            camera = cameras[4];
+            break;
+
+        case 65: //A
+        case 97: //a
+            scene.traverse(function (node) {
+                if (node instanceof THREE.Mesh) {
+                    node.material.wireframe = !node.material.wireframe;
+                }
+            });
+            break;
+
+        case 83:  //S
+        case 115: //s
+            ball.userData.jumping = !ball.userData.jumping;
+            break;
+
+        case 69:  //E
+        case 101: //e
+            scene.traverse(function (node) {
+                if (node instanceof THREE.AxisHelper) {
+                    node.visible = !node.visible;
+                }
+            });
+            break;
+    }
 }
 
-///////////////////////
-/* KEY UP CALLBACK */
-///////////////////////
-function onKeyUp(e){
+function render() {
     'use strict';
+    renderer.render(scene, camera);
+}
+
+function init() {
+    'use strict';
+    renderer = new THREE.WebGLRenderer({
+        antialias: true
+    });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    createScene();
+    createCameras();
+
+    render();
+
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("resize", onResize);
+}
+
+function animate() {
+    'use strict';
+
+    if (ball.userData.jumping) {
+        ball.userData.step += 0.04;
+        ball.position.y = Math.abs(30 * (Math.sin(ball.userData.step)));
+        ball.position.z = 15 * (Math.cos(ball.userData.step));
+    }
+    render();
+
+    requestAnimationFrame(animate);
 }
