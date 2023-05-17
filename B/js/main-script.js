@@ -113,7 +113,6 @@ function createCamera(type,x,y,z) {
 function createCameras() {
     'use strict';
 
-    // FRONT CAMERA
     cameras[0] = createCamera(ORTOGONAL,0,0,50);
 
     cameras[1] = createCamera(ORTOGONAL,50,0,0);
@@ -143,27 +142,13 @@ function onResize() {
 function onKeyDown(e) {
     'use strict';
 
+
+    // Camera control (generic)
+    if (e.keyCode <= 53 && e.keyCode >= 49) {
+        camera = cameras[e.keyCode - 49];
+    }
+
     switch (e.keyCode) {
-        case 49: // 1
-            camera = cameras[0];
-            break;
-
-        case 50: // 2
-            camera = cameras[1];
-            break;
-        
-        case 51: // 3
-            camera = cameras[2];
-            break;
-
-        case 52: // 4
-            camera = cameras[3];
-            break;
-        
-        case 53: // 5
-            camera = cameras[4];
-            break;
-
         case 65: //A
         case 97: //a
             scene.traverse(function (node) {
