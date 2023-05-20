@@ -1,4 +1,5 @@
 const SPEED = 1;
+const ROT_SPEED = 0.02;
 const SCALE = 3;
 
 ////////////////////////////////////////////
@@ -20,8 +21,11 @@ var trailor_velZ = [0,0]
 /////////         ROBOT            /////////
 ////////////////////////////////////////////
 var robot, pivotHead;
+var Arms = [];
+var Legs = [];
 var head_ror = [0,0];
-var i = 0;
+var leg_ror = [0,0];
+var arm_tr = [0,0];
 
 
 
@@ -101,26 +105,170 @@ function addUpperBody(obj, x, y, z) {
     obj.add(UpperBody);
 }
 
+function addEye(obj, x, y, z) {
+
+    'use strict';
+
+    var Eye = new THREE.Object3D();
+
+    geometry = new THREE.CubeGeometry(0.5 * SCALE, 0.2 * SCALE, 1 * SCALE);
+    material = new THREE.MeshBasicMaterial({ color: 0xFFFF00, wireframe: true });
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(x, y, z);
+    
+    Eye.add(mesh);
+
+    obj.add(Eye);
+}
+
+function addAntenna(obj, x, y, z) {
+
+    'use strict';
+
+    var Antenna = new THREE.Object3D();
+
+    geometry = new THREE.CubeGeometry(0.5 * SCALE, 1.5 * SCALE, 1 * SCALE);
+    material = new THREE.MeshBasicMaterial({ color: 0x898989, wireframe: true });
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(x, y, z);
+    
+    Antenna.add(mesh);
+
+    obj.add(Antenna);
+}
+
 function addHead(obj, x, y, z) {
 
     'use strict';
 
     var Head = new THREE.Object3D();
-
+    
+    
     geometry = new THREE.CubeGeometry(2 * SCALE, 1.5 * SCALE, 2 * SCALE);
     material = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe: true });
     mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(0, 2*SCALE,0);
-
+    
+    
     Head.add(mesh);
-
+    
+    
     pivotHead = new THREE.Object3D();
     pivotHead.position.set(x,y+SCALE,z);
     pivotHead.add(mesh);
     scene.add(pivotHead);
-
+    
+    addEye(pivotHead, 0.5 * SCALE, 2 * SCALE, 0.6 * SCALE);
+    addEye(pivotHead, -0.5 * SCALE, 2 * SCALE, 0.6 * SCALE);
+    addAntenna(pivotHead, 0.6 * SCALE, 3 * SCALE, 0);
+    addAntenna(pivotHead, -0.6 * SCALE, 3 * SCALE, 0);
 
     obj.add(Head);
+}
+
+function addTube(obj, x, y, z) {
+
+    'use strict';
+
+    var Tube = new THREE.Object3D();
+    
+    geometry = new THREE.CylinderGeometry(SCALE * 0.2, SCALE * 0.2, SCALE * 3, 16);
+    material = new THREE.MeshBasicMaterial({ color: 0x80FF80, wireframe: true });
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(x, y, z);
+    
+    
+    Tube.add(mesh);
+    
+    obj.add(Tube);
+}
+
+function addExhaust(obj, x, y, z) {
+
+    'use strict';
+
+    var Exhaust = new THREE.Object3D();
+    
+    geometry = new THREE.CylinderGeometry(SCALE * 0.5, SCALE * 0.5, SCALE * 4, 16);
+    material = new THREE.MeshBasicMaterial({ color: 0x802280, wireframe: true });
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(x, y, z);
+    
+    
+    Exhaust.add(mesh);
+    addTube(Exhaust, x, y + 2 * SCALE, z)
+    obj.add(Exhaust);
+}
+
+function addForearm(obj, x, y, z) {
+
+    'use strict';
+
+    var Forearm = new THREE.Object3D();
+    
+    
+    geometry = new THREE.CubeGeometry(2 * SCALE, 4 * SCALE, 2 * SCALE);
+    material = new THREE.MeshBasicMaterial({ color: 0x222280, wireframe: true });
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(x, y, z);
+    
+    
+    Forearm.add(mesh);
+    
+    obj.add(Forearm);
+}
+
+function addArm(obj, x, y, z) {
+
+    'use strict';
+
+    var Arm = new THREE.Object3D();
+    
+    
+    geometry = new THREE.CubeGeometry(2 * SCALE, 6 * SCALE, 2 * SCALE);
+    material = new THREE.MeshBasicMaterial({ color: 0x1111FF, wireframe: true });
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(x, y, z);
+    
+    
+    Arm.add(mesh);
+    
+    
+    addForearm(Arm, x, -5 * SCALE + y, z);
+    if (Arms.length == 1) {
+        addExhaust(Arm, x - 1.5 * SCALE, 0.5 * SCALE + y, z);
+        
+    } else {
+        addExhaust(Arm, x + 1.5 * SCALE, 0.5 * SCALE + y, z);
+    }
+
+    obj.add(Arm);
+    Arms.push(Arm);
+}
+
+function addLeg(obj, x, y, z) {
+
+    'use strict';
+
+    var Leg = new THREE.Object3D();
+    
+    // TODO add details to leg
+    
+    geometry = new THREE.CubeGeometry(2 * SCALE, 8 * SCALE, 2 * SCALE);
+    material = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe: true });
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(0, -5*SCALE,0);
+    
+    Leg.add(mesh);
+    
+    var pivotLeg = new THREE.Object3D();
+    pivotLeg.position.set(x,y + 5 * SCALE,z);
+    pivotLeg.add(mesh);
+    
+    scene.add(pivotLeg);
+
+    obj.add(Leg);
+    Legs.push(pivotLeg);
 }
 
 
@@ -160,19 +308,16 @@ function createRobot(x, y, z) {
     // cabeça
     addHead(robot,0,SCALE * 3.5 + 10,0);
 
-    /*
     // left leg
-    addLeg(robot, -25, -1, -8);
+    addLeg(robot, 2*SCALE, -3 * SCALE, 0);
     
     // Right leg
-    addLeg(robot, -25, -1, -8);
+    addLeg(robot, -2*SCALE, -3 * SCALE, 0);
 
     // Left arm
-    addArm(robot, -25, -1, -8);
-
+    addArm(robot, 4*SCALE, 3.34*SCALE, -1*SCALE);
     // Right arm
-    addArm(robot, -25, -1, -8);
-    */
+    addArm(robot, -4*SCALE, 3.34*SCALE, -1*SCALE);
 
 
 
@@ -303,6 +448,26 @@ function onKeyDown(e) {
             head_ror[1] = 1;
             break;
 
+        case 87: // W
+        case 119: // w
+            leg_ror[0] = -1;
+            break;
+
+        case 83: // S
+        case 115: // s
+            leg_ror[1] = 1;
+            break;
+
+        case 69: // E
+        case 101: // e
+            arm_tr[0] = -1;
+            break;
+
+        case 68: // D
+        case 100: // d
+            arm_tr[1] = 1;
+            break;
+
         case 65: //A
         case 97: //a
             scene.traverse(function (node) {
@@ -317,8 +482,8 @@ function onKeyDown(e) {
             // ball.userData.jumping = !ball.userData.jumping;
             break;
 
-        case 69:  //E
-        case 101: //e
+        case 1000:  //non functional
+        case 10001: //non functional
             scene.traverse(function (node) {
                 if (node instanceof THREE.AxisHelper) {
                     node.visible = !node.visible;
@@ -344,6 +509,36 @@ function onKeyUp(e) {
         case 40: // LEFT ARROW
             trailor_velZ[1] = 0; // Stop left movement when key is released
             break;
+        case 70: // F
+        case 102: // f
+            head_ror[0] = 0;
+            break;
+
+        case 82: // R
+        case 114: // r
+            head_ror[1] = 0;
+            break;
+
+        case 69: // E
+        case 101: // e
+            arm_tr[0] = 0;
+            break;
+
+        case 68: // D
+        case 100: // d
+            arm_tr[1] = 0;
+            break;
+
+        case 87: // W
+        case 119: // w
+            leg_ror[0] = 0;
+            break;
+
+        case 83: // S
+        case 115: // s
+            leg_ror[1] = 0;
+            break;
+    
     }
 }
 
@@ -384,12 +579,25 @@ function animate() {
         newZ = newZ / Math.sqrt(2);
     }
 
+    
     trailor.position.x += newX * SPEED;
     trailor.position.z += newZ * SPEED;
 
+    var newPos = arm_tr[0] + arm_tr[1];
+    if(Arms[0].position.x + (newPos * ROT_SPEED) <= 0 * SCALE &&  Arms[0].position.x + (newPos * ROT_SPEED) >= -2 * SCALE) {
+        Arms[0].position.x += newPos * ROT_SPEED;
+        Arms[1].position.x -= newPos * ROT_SPEED;
+        Arms[0].position.z += newPos * ROT_SPEED;
+        Arms[1].position.z += newPos * ROT_SPEED;
+    }
+
     // Rodar a cabeça
-    i += 0.01;
-    pivotHead.rotation.set(i,0,0);
+    var rot = (head_ror[0] + head_ror[1]) * ROT_SPEED;
+    pivotHead.rotation.set(pivotHead.rotation.x + rot,0,0);
+
+    rot = (leg_ror[0] + leg_ror[1]) * ROT_SPEED;
+    Legs[0].rotation.set(Legs[0].rotation.x - rot,0,0);
+    Legs[1].rotation.set(Legs[1].rotation.x - rot,0,0);
 
     render();
 
