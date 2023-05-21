@@ -27,43 +27,33 @@ var head_ror = [0,0];
 var leg_ror = [0,0];
 var arm_tr = [0,0];
 
+const CUBE = 0;
+const CYLINDER = 1;
 
-
-
-function addWheel(obj, x, y, z) {
+function addGeneric(obj,x,y,z,type,color,sx,sy,sz) {
     'use strict';
+    if (type == CUBE) {
+        geometry = new THREE.CubeGeometry(SCALE * sx,SCALE * sy, SCALE * sz);
+        material = new THREE.MeshBasicMaterial({ color: color, wireframe: true });
+        mesh = new THREE.Mesh(geometry, material);
+        mesh.position.set(x, y, z);
+        obj.add(mesh);
+    }
 
-    material = new THREE.MeshBasicMaterial({ color: 0xC41274, wireframe: true });
+    if (type == CYLINDER) {
+        material = new THREE.MeshBasicMaterial({ color: color, wireframe: true });
 
-    var Container =  new THREE.Object3D();
-    geometry = new THREE.CylinderGeometry(SCALE * 1.5,SCALE * 1.5, SCALE * 1.5, 16);
-    mesh = new THREE.Mesh(geometry, material);
+        var Container =  new THREE.Object3D();
+        geometry = new THREE.CylinderGeometry(SCALE * sx,SCALE * sy, SCALE * sz, 16);
+        mesh = new THREE.Mesh(geometry, material);
 
-    Container.add(mesh);
-    // Rotate 90º
-    Container.rotation.z = 1.57;
-    Container.position.set(x, y-3, z);
-    obj.add(Container);
+        Container.add(mesh);
+        // Rotate 90º
+        Container.rotation.z = 1.57;
+        Container.position.set(x, y-3, z);
+        obj.add(Container);
+    }
 }
-
-function addCargo(obj, x, y, z) {
-    'use strict';
-    geometry = new THREE.CubeGeometry(20, 20, 60);
-    material = new THREE.MeshBasicMaterial({ color: 0x1b2133, wireframe: true });
-    mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(x, y, z);
-    obj.add(mesh);
-}
-
-function addConnection(obj, x, y, z) {
-    'use strict';
-    geometry = new THREE.CubeGeometry(15, 5, 25);
-    material = new THREE.MeshBasicMaterial({ color: 0x344F24, wireframe: true });
-    mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(x, y, z);
-    obj.add(mesh);
-}
-
 
 function addWaist(obj, x, y, z) {
     'use strict';
@@ -92,8 +82,8 @@ function addUpperBody(obj, x, y, z) {
     addWaist(UpperBody,x,y - 4 * SCALE,z);
     addGrill(UpperBody,x,y - SCALE * 2,z + 2 * SCALE);
 
-    addWheel(UpperBody,x - 2.2*SCALE,y - SCALE * 4,z);
-    addWheel(UpperBody,x + 2.2*SCALE,y - SCALE * 4,z);
+    addGeneric(UpperBody,x - 2.2 * SCALE,y - SCALE * 4,z,CYLINDER,0xC41274,1.5,1.5,1.5);
+    addGeneric(UpperBody,x + 2.2 * SCALE,y - SCALE * 4,z,CYLINDER,0xC41274,1.5,1.5,1.5);
 
     geometry = new THREE.CubeGeometry(6 * SCALE, 6 * SCALE, 4 * SCALE);
     material = new THREE.MeshBasicMaterial({ color: 0x1b2133, wireframe: true });
@@ -277,16 +267,17 @@ function createTrailer(x, y, z) {
 
     trailor = new THREE.Object3D();
 
+    // Cargo
+    addGeneric(trailor,0,10,0,CUBE,0x1b2133,7,7,20);
 
-    addCargo(trailor, 0, 10, 0);
+    // Connection
+    addGeneric(trailor,0,3,35,CUBE,0x344F24,5,1.67,8.33);
 
-
-    addConnection(trailor,0,3,35);
-
-    addWheel(trailor, -8, -1, -25);
-    addWheel(trailor, 8, -1, -25);
-    addWheel(trailor, 8, -1, 25);
-    addWheel(trailor, -8, -1, 25);
+    // Wheels
+    addGeneric(trailor,-8,-1,-25,CYLINDER,0xC41274,1.5,1.5,1.5);
+    addGeneric(trailor,-8,-1,25,CYLINDER,0xC41274,1.5,1.5,1.5);
+    addGeneric(trailor,8,-1,-25,CYLINDER,0xC41274,1.5,1.5,1.5);
+    addGeneric(trailor,8,-1,25,CYLINDER,0xC41274,1.5,1.5,1.5);
 
 
     scene.add(trailor);
@@ -304,7 +295,6 @@ function createRobot(x, y, z) {
     // tronco
     addUpperBody(robot, 0, 10, 0);
 
-
     // cabeça
     addHead(robot,0,SCALE * 3.5 + 10,0);
 
@@ -318,8 +308,6 @@ function createRobot(x, y, z) {
     addArm(robot, 4*SCALE, 3.34*SCALE, -1*SCALE);
     // Right arm
     addArm(robot, -4*SCALE, 3.34*SCALE, -1*SCALE);
-
-
 
     scene.add(robot);
 
