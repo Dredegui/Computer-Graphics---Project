@@ -1,5 +1,5 @@
 const SPEED = 1;
-const ROT_SPEED = 0.02;
+const ROT_SPEED = 0.05;
 const SCALE = 3;
 
 ////////////////////////////////////////////
@@ -55,76 +55,31 @@ function addGeneric(obj,x,y,z,type,color,sx,sy,sz) {
     }
 }
 
-function addWaist(obj, x, y, z) {
-    'use strict';
-    geometry = new THREE.CubeGeometry(6 * SCALE, 2 * SCALE, 4 * SCALE);
-    material = new THREE.MeshBasicMaterial({ color: 0x2b3113, wireframe: true });
-    mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(x, y, z);
-    obj.add(mesh);
-}
-
-function addGrill(obj, x, y, z) {
-    'use strict';
-    geometry = new THREE.CubeGeometry(4 * SCALE, 4 * SCALE, 1 * SCALE);
-    material = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
-    mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(x, y, z);
-    obj.add(mesh);
-}
-
 function addUpperBody(obj, x, y, z) {
 
     'use strict';
 
     var UpperBody = new THREE.Object3D();
 
-    addWaist(UpperBody,x,y - 4 * SCALE,z);
-    addGrill(UpperBody,x,y - SCALE * 2,z + 2 * SCALE);
+    // WAIST
+    addGeneric(UpperBody,x,y-3.5*SCALE,z + 0*SCALE,CUBE,0x909090,8, 1, 4);
+    addGeneric(UpperBody,x,y-4.5*SCALE,z + 1.5*SCALE,CUBE,0x9090FF,4, 1, 1);
 
-    addGeneric(UpperBody,x - 2.2 * SCALE,y - SCALE * 4,z,CYLINDER,0xC41274,1.5,1.5,1.5);
-    addGeneric(UpperBody,x + 2.2 * SCALE,y - SCALE * 4,z,CYLINDER,0xC41274,1.5,1.5,1.5);
+    // GRILL
+    addGeneric(UpperBody,x,y-SCALE * 2,z + 2 * SCALE,CUBE,0x888888,4, 4, 1);
 
-    geometry = new THREE.CubeGeometry(6 * SCALE, 6 * SCALE, 4 * SCALE);
+    // WHEELS
+    addGeneric(UpperBody,x - 3 * SCALE,y - SCALE * 3.5,z,CYLINDER,0xff0000,1.5,1.5,1.5);
+    addGeneric(UpperBody,x + 3 * SCALE,y - SCALE * 3.5,z,CYLINDER,0xff0000,1.5,1.5,1.5);
+
+    geometry = new THREE.CubeGeometry(8 * SCALE, 4 * SCALE, 4 * SCALE);
     material = new THREE.MeshBasicMaterial({ color: 0x1b2133, wireframe: true });
     mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(x, y, z);
+    mesh.position.set(x, y + SCALE, z);
 
     UpperBody.add(mesh);
 
     obj.add(UpperBody);
-}
-
-function addEye(obj, x, y, z) {
-
-    'use strict';
-
-    var Eye = new THREE.Object3D();
-
-    geometry = new THREE.CubeGeometry(0.5 * SCALE, 0.2 * SCALE, 1 * SCALE);
-    material = new THREE.MeshBasicMaterial({ color: 0xFFFF00, wireframe: true });
-    mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(x, y, z);
-    
-    Eye.add(mesh);
-
-    obj.add(Eye);
-}
-
-function addAntenna(obj, x, y, z) {
-
-    'use strict';
-
-    var Antenna = new THREE.Object3D();
-
-    geometry = new THREE.CubeGeometry(0.5 * SCALE, 1.5 * SCALE, 1 * SCALE);
-    material = new THREE.MeshBasicMaterial({ color: 0x898989, wireframe: true });
-    mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(x, y, z);
-    
-    Antenna.add(mesh);
-
-    obj.add(Antenna);
 }
 
 function addHead(obj, x, y, z) {
@@ -148,10 +103,13 @@ function addHead(obj, x, y, z) {
     pivotHead.add(mesh);
     scene.add(pivotHead);
     
-    addEye(pivotHead, 0.5 * SCALE, 2 * SCALE, 0.6 * SCALE);
-    addEye(pivotHead, -0.5 * SCALE, 2 * SCALE, 0.6 * SCALE);
-    addAntenna(pivotHead, 0.6 * SCALE, 3 * SCALE, 0);
-    addAntenna(pivotHead, -0.6 * SCALE, 3 * SCALE, 0);
+    // EYES
+    addGeneric(pivotHead, 0.5 * SCALE, 2 * SCALE, 0.6 * SCALE,CUBE,0xffff00,0.5, 0.2, 1);
+    addGeneric(pivotHead, -0.5 * SCALE, 2 * SCALE, 0.6 * SCALE,CUBE,0xffff00,0.5, 0.2, 1);
+
+    // ANTENNA
+    addGeneric(pivotHead, 0.6 * SCALE, 3 * SCALE, 0,CUBE,0x898989,0.5, 1.5, 1);
+    addGeneric(pivotHead, -0.6 * SCALE, 3 * SCALE, 0,CUBE,0x898989,0.5, 1.5, 1);
 
     obj.add(Head);
 }
@@ -197,7 +155,7 @@ function addForearm(obj, x, y, z) {
     var Forearm = new THREE.Object3D();
     
     
-    geometry = new THREE.CubeGeometry(2 * SCALE, 4 * SCALE, 2 * SCALE);
+    geometry = new THREE.CubeGeometry(2 * SCALE, 2 * SCALE, 4 * SCALE);
     material = new THREE.MeshBasicMaterial({ color: 0x222280, wireframe: true });
     mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y, z);
@@ -223,8 +181,7 @@ function addArm(obj, x, y, z) {
     
     Arm.add(mesh);
     
-    
-    addForearm(Arm, x, -5 * SCALE + y, z);
+    addGeneric(Arm, x, -2 * SCALE + y, z + 3 * SCALE,CUBE,0x222280,2,2,4);
     if (Arms.length == 1) {
         addExhaust(Arm, x - 1.5 * SCALE, 0.5 * SCALE + y, z);
         
@@ -244,17 +201,26 @@ function addLeg(obj, x, y, z) {
     
     // TODO add details to leg
     
-    geometry = new THREE.CubeGeometry(2 * SCALE, 8 * SCALE, 2 * SCALE);
+    geometry = new THREE.CubeGeometry(1 * SCALE, 2 * SCALE, 1 * SCALE);
     material = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe: true });
     mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(0, -5*SCALE,0);
+    mesh.position.set(0, -2*SCALE,0);
     
     Leg.add(mesh);
+    
     
     var pivotLeg = new THREE.Object3D();
     pivotLeg.position.set(x,y + 5 * SCALE,z);
     pivotLeg.add(mesh);
     
+    //Big Leg
+    addGeneric(pivotLeg,0,-7*SCALE,0,CUBE,0x00ff00,2, 8, 2);
+    
+    //Wheels
+    // addGeneric(UpperBody,x - 3 * SCALE,y - SCALE * 3.5,z,CYLINDER,0xff0000,1.5,1.5,1.5);
+    // addGeneric(UpperBody,x + 3 * SCALE,y - SCALE * 3.5,z,CYLINDER,0xff0000,1.5,1.5,1.5);
+    
+
     scene.add(pivotLeg);
 
     obj.add(Leg);
@@ -274,10 +240,10 @@ function createTrailer(x, y, z) {
     addGeneric(trailor,0,3,35,CUBE,0x344F24,5,1.67,8.33);
 
     // Wheels
-    addGeneric(trailor,-8,-1,-25,CYLINDER,0xC41274,1.5,1.5,1.5);
-    addGeneric(trailor,-8,-1,25,CYLINDER,0xC41274,1.5,1.5,1.5);
-    addGeneric(trailor,8,-1,-25,CYLINDER,0xC41274,1.5,1.5,1.5);
-    addGeneric(trailor,8,-1,25,CYLINDER,0xC41274,1.5,1.5,1.5);
+    addGeneric(trailor,-8,-1,-25,CYLINDER,0x000000,1.5,1.5,1.5);
+    addGeneric(trailor,-8,-1,-15,CYLINDER,0x000000,1.5,1.5,1.5);
+    addGeneric(trailor,8,-1,-25,CYLINDER,0x000000,1.5,1.5,1.5);
+    addGeneric(trailor,8,-1,-15,CYLINDER,0xC000000,1.5,1.5,1.5);
 
 
     scene.add(trailor);
@@ -299,15 +265,15 @@ function createRobot(x, y, z) {
     addHead(robot,0,SCALE * 3.5 + 10,0);
 
     // left leg
-    addLeg(robot, 2*SCALE, -3 * SCALE, 0);
+    addLeg(robot, 1.2*SCALE, -3 * SCALE, 0);
     
     // Right leg
-    addLeg(robot, -2*SCALE, -3 * SCALE, 0);
+    addLeg(robot, -1.2*SCALE, -3 * SCALE, 0);
 
     // Left arm
-    addArm(robot, 4*SCALE, 3.34*SCALE, -1*SCALE);
+    addArm(robot, 5*SCALE, 3.34*SCALE, -1*SCALE);
     // Right arm
-    addArm(robot, -4*SCALE, 3.34*SCALE, -1*SCALE);
+    addArm(robot, -5*SCALE, 3.34*SCALE, -1*SCALE);
 
     scene.add(robot);
 
