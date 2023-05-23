@@ -62,15 +62,14 @@ function addUpperBody(obj, x, y, z) {
     var UpperBody = new THREE.Object3D();
 
     // WAIST
-    addGeneric(UpperBody,x,y-3.5*SCALE,z + 0*SCALE,CUBE,0x909090,8, 1, 4);
-    addGeneric(UpperBody,x,y-4.5*SCALE,z + 1.5*SCALE,CUBE,0x9090FF,4, 1, 1);
+    addGeneric(UpperBody,x,y-3*SCALE,z + 1.5*SCALE,CUBE,0x909090,8, 1, 1);
 
     // GRILL
-    addGeneric(UpperBody,x,y-SCALE * 2,z + 2 * SCALE,CUBE,0x888888,4, 4, 1);
+    addGeneric(UpperBody,x,y-SCALE * 1.2,z + 2 * SCALE,CUBE,0xF9F9F0,4, 4, 1);
 
     // WHEELS
-    addGeneric(UpperBody,x - 3 * SCALE,y - SCALE * 3.5,z,CYLINDER,0xff0000,1.5,1.5,1.5);
-    addGeneric(UpperBody,x + 3 * SCALE,y - SCALE * 3.5,z,CYLINDER,0xff0000,1.5,1.5,1.5);
+    addGeneric(UpperBody,x - 3 * SCALE,y - SCALE * 2.1,z + 0.3*SCALE,CYLINDER,0xff0000,1.3,1.3,1.3);
+    addGeneric(UpperBody,x + 3 * SCALE,y - SCALE * 2.1,z + 0.3*SCALE,CYLINDER,0xff0000,1.3,1.3,1.3);
 
     geometry = new THREE.CubeGeometry(8 * SCALE, 4 * SCALE, 4 * SCALE);
     material = new THREE.MeshBasicMaterial({ color: 0x1b2133, wireframe: true });
@@ -193,7 +192,7 @@ function addArm(obj, x, y, z) {
     Arms.push(Arm);
 }
 
-function addLeg(obj, x, y, z) {
+function addLeg(obj, x, y, z, left) {
 
     'use strict';
 
@@ -201,7 +200,7 @@ function addLeg(obj, x, y, z) {
     
     // TODO add details to leg
     
-    geometry = new THREE.CubeGeometry(1 * SCALE, 2 * SCALE, 1 * SCALE);
+    geometry = new THREE.CubeGeometry(1 * SCALE, 4 * SCALE, 1 * SCALE);
     material = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe: true });
     mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(0, -2*SCALE,0);
@@ -210,15 +209,18 @@ function addLeg(obj, x, y, z) {
     
     
     var pivotLeg = new THREE.Object3D();
-    pivotLeg.position.set(x,y + 5 * SCALE,z);
+    pivotLeg.position.set(x,y + 7 * SCALE,z);
     pivotLeg.add(mesh);
     
     //Big Leg
-    addGeneric(pivotLeg,0,-7*SCALE,0,CUBE,0x00ff00,2, 8, 2);
-    
+    addGeneric(pivotLeg,0,-8*SCALE,0,CUBE,0x00ff00,2, 8, 2);
+    var pos = 1;
+    if (left) {
+        pos = -1;
+    }
     //Wheels
-    // addGeneric(UpperBody,x - 3 * SCALE,y - SCALE * 3.5,z,CYLINDER,0xff0000,1.5,1.5,1.5);
-    // addGeneric(UpperBody,x + 3 * SCALE,y - SCALE * 3.5,z,CYLINDER,0xff0000,1.5,1.5,1.5);
+    addGeneric(pivotLeg, pos * 1.7 * SCALE,-9.5*SCALE,1*SCALE,CYLINDER,0xff0000,1.3,1.3,1.3);
+    addGeneric(pivotLeg, pos * 1.7 * SCALE,-6.5*SCALE,1*SCALE,CYLINDER,0xff0000,1.3,1.3,1.3);
     
 
     scene.add(pivotLeg);
@@ -265,10 +267,10 @@ function createRobot(x, y, z) {
     addHead(robot,0,SCALE * 3.5 + 10,0);
 
     // left leg
-    addLeg(robot, 1.2*SCALE, -3 * SCALE, 0);
+    addLeg(robot, 1.2*SCALE, -3 * SCALE, 0, false);
     
     // Right leg
-    addLeg(robot, -1.2*SCALE, -3 * SCALE, 0);
+    addLeg(robot, -1.2*SCALE, -3 * SCALE, 0, true);
 
     // Left arm
     addArm(robot, 5*SCALE, 3.34*SCALE, -1*SCALE);
@@ -545,14 +547,27 @@ function animate() {
         Arms[1].position.z += newPos * ROT_SPEED;
     }
 
+
     // Rodar a cabeça
     var rot = (head_ror[0] + head_ror[1]) * ROT_SPEED;
-    pivotHead.rotation.set(pivotHead.rotation.x + rot,0,0);
+    if (pivotHead.rotation.x +rot <= 0 && pivotHead.rotation.x +rot >= -3) {
+        pivotHead.rotation.set(pivotHead.rotation.x + rot,0,0);
+    } else if (pivotHead.rotation.x < 0.1 && pivotHead.rotation.x > -0.1) {
+        pivotHead.rotation.set(0,0,0);
+    }
 
-    rot = (leg_ror[0] + leg_ror[1]) * ROT_SPEED;
-    Legs[0].rotation.set(Legs[0].rotation.x - rot,0,0);
-    Legs[1].rotation.set(Legs[1].rotation.x - rot,0,0);
-
+    rot = (leg_ror[0] + leg_ror[1]) * ROT_SPEED / 2;
+    var pos;
+    if (Legs[0].rotation.x - rot <= 1.58 &&  Legs[0].rotation.x - rot >= 0) {
+        pos = Legs[0].rotation.x - rot;
+    } else if (1.6 - Legs[0].rotation.x > Legs[0].rotation.x - 0) {
+        pos = 0;        
+    } else {
+        pos = 1.57; 
+    }
+    Legs[0].rotation.set(pos,0,0);
+    Legs[1].rotation.set(pos,0,0);
+    
     render();
 
     requestAnimationFrame(animate);
