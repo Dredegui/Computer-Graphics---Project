@@ -33,6 +33,13 @@ const CYLINDER = 1;
 
 var previousTime = 0;
 
+var modoCamiao = false;
+var colision = false;
+var targetPosition = new THREE.Vector3(0, 13, -55);
+
+var trailorBoundingBox;
+var robotBoundingBox;
+
 function addGeneric(obj,x,y,z,type,color,sx,sy,sz) {
     'use strict';
     if (type == CUBE) {
@@ -239,16 +246,16 @@ function createTrailer(x, y, z) {
     trailor = new THREE.Object3D();
 
     // Cargo
-    addGeneric(trailor,0,10,0,CUBE,0x1b2133,7,7,20);
+    addGeneric(trailor,0,10,0,CUBE,0x1b2133,7,7,15);
 
     // Connection
-    addGeneric(trailor,0,3,35,CUBE,0x344F24,5,1.67,8.33);
+    addGeneric(trailor,0,3,25,CUBE,0x344F24,5,1.67,6);
 
     // Wheels
-    addGeneric(trailor,-8,-1,-25,CYLINDER,0x000000,1.5,1.5,1.5);
-    addGeneric(trailor,-8,-1,-15,CYLINDER,0x000000,1.5,1.5,1.5);
-    addGeneric(trailor,8,-1,-25,CYLINDER,0x000000,1.5,1.5,1.5);
-    addGeneric(trailor,8,-1,-15,CYLINDER,0xC000000,1.5,1.5,1.5);
+    addGeneric(trailor,-8,-1,-15,CYLINDER,0x000000,1.3,1.3,1.3);
+    addGeneric(trailor,-8,-1,-5,CYLINDER,0x000000,1.3,1.3,1.3);
+    addGeneric(trailor,8,-1,-15,CYLINDER,0x000000,1.3,1.3,1.3);
+    addGeneric(trailor,8,-1,-5,CYLINDER,0xC000000,1.3,1.3,1.3);
 
 
     scene.add(trailor);
@@ -296,7 +303,7 @@ function createScene() {
     scene.add(new THREE.AxisHelper(10));
     scene.background = new THREE.Color( 0xffffff );
 
-    createTrailer(-50, 8, -50);
+    createTrailer(-50, 13, -50);
     createRobot(0, 8, 0);
 }
 
@@ -523,16 +530,58 @@ function init() {
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
     window.addEventListener("resize", onResize);
+
+}
+
+
+function colisionDetected() {
+
+    if (modoCamiao == false) {
+        return false;
+    }
+
+    // Perform AABB collision check
+    trailorBoundingBox = new THREE.Box3().setFromObject(trailor);
+    robotBoundingBox = new THREE.Box3().setFromObject(robot);
+
+    if (trailorBoundingBox.intersectsBox(robotBoundingBox)) {
+        // Collision detected
+        console.log("Collision occurred between trailor and robot!");
+        colision = true;
+        return true;
+    } else {
+        // No collision
+        console.log("No collision between trailor and robot.");
+        colision = false;
+        return false;
+    }
 }
 
 function animate() {
     'use strict';
 
-
     // Calculate delta time
     const currentTime = performance.now();
     const deltaTime = (currentTime - previousTime) / 10;
     previousTime = currentTime;
+
+    modoCamiao = true;
+
+    if (colision) {
+        var direction = targetPosition.clone().sub(trailor.position).normalize();
+        var movement = direction.multiplyScalar(SPEED * deltaTime);
+        movement.x *= 1.6
+        if (movement.z < 0.3) {
+            movement.x *= 3;
+        }
+        movement.z *= 0.2
+        trailor.position.add(movement);
+        colisionDetected();
+        render();
+        requestAnimationFrame(animate);
+        return ; 
+    }
+
 
 
     // Movimentar o reboque
@@ -557,15 +606,21 @@ function animate() {
         Arms[1].position.z += newPos * ROT_SPEED * deltaTime * ARM_BONUS;
     }
 
+    // Ver se está em modo camiao
+    if (Arms[0].position.x + (newPos * ROT_SPEED * deltaTime) >= -2 * SCALE) {
+        modoCamiao = false;
+    }
 
     // Rodar a cabeça
     var rot = (head_ror[0] + head_ror[1]) * ROT_SPEED * deltaTime;
-    if (pivotHead.rotation.x +rot <= 0 && pivotHead.rotation.x +rot >= -3) {
+    if (pivotHead.rotation.x + rot <= 0 && pivotHead.rotation.x + rot >= -3) {
         pivotHead.rotation.set(pivotHead.rotation.x + rot,0,0);
-    } else if (pivotHead.rotation.x < 0.1 && pivotHead.rotation.x > -0.1) {
-        pivotHead.rotation.set(0,0,0);
     }
 
+    // Ver se está em modo camiao
+    if (pivotHead.rotation.x >= -2.5) {
+        modoCamiao = false;
+    }
 
     // Rodar pernas
     rot = (leg_ror[0] + leg_ror[1]) * ROT_SPEED * deltaTime / 2;
@@ -577,9 +632,17 @@ function animate() {
     } else {
         pos = 1.57; 
     }
+
+    if (Legs[0].rotation.x < 1.5) {
+        modoCamiao = false;
+    }
+
     Legs[0].rotation.set(pos,0,0);
     Legs[1].rotation.set(pos,0,0);
     
+
+    colisionDetected();
+
     render();
 
     requestAnimationFrame(animate);
