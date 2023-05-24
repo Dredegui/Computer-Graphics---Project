@@ -1,6 +1,7 @@
 const SPEED = 1;
 const ROT_SPEED = 0.05;
 const SCALE = 3;
+const ARM_BONUS = 1.7;
 
 ////////////////////////////////////////////
 /////////         BASE          ////////////
@@ -29,6 +30,8 @@ var arm_tr = [0,0];
 
 const CUBE = 0;
 const CYLINDER = 1;
+
+var previousTime = 0;
 
 function addGeneric(obj,x,y,z,type,color,sx,sy,sz) {
     'use strict';
@@ -396,12 +399,12 @@ function onKeyDown(e) {
 
         case 70: // F
         case 102: // f
-            head_ror[0] = -1;
+            head_ror[0] = 1;
             break;
 
         case 82: // R
         case 114: // r
-            head_ror[1] = 1;
+            head_ror[1] = -1;
             break;
 
         case 87: // W
@@ -525,6 +528,13 @@ function init() {
 function animate() {
     'use strict';
 
+
+    // Calculate delta time
+    const currentTime = performance.now();
+    const deltaTime = (currentTime - previousTime) / 10;
+    previousTime = currentTime;
+
+
     // Movimentar o reboque
     var newX = trailor_velX[0] + trailor_velX[1];
     var newZ = trailor_velZ[0] + trailor_velZ[1];
@@ -536,27 +546,29 @@ function animate() {
     }
 
     
-    trailor.position.x += newX * SPEED;
-    trailor.position.z += newZ * SPEED;
+    trailor.position.x += newX * SPEED * deltaTime;
+    trailor.position.z += newZ * SPEED * deltaTime;
 
     var newPos = arm_tr[0] + arm_tr[1];
-    if(Arms[0].position.x + (newPos * ROT_SPEED) <= 0 * SCALE &&  Arms[0].position.x + (newPos * ROT_SPEED) >= -2 * SCALE) {
-        Arms[0].position.x += newPos * ROT_SPEED;
-        Arms[1].position.x -= newPos * ROT_SPEED;
-        Arms[0].position.z += newPos * ROT_SPEED;
-        Arms[1].position.z += newPos * ROT_SPEED;
+    if(Arms[0].position.x + (newPos * ROT_SPEED * deltaTime) <= 0 * SCALE &&  Arms[0].position.x + (newPos * ROT_SPEED * deltaTime) >= -2 * SCALE) {
+        Arms[0].position.x += newPos * ROT_SPEED * deltaTime * ARM_BONUS;
+        Arms[1].position.x -= newPos * ROT_SPEED * deltaTime * ARM_BONUS;
+        Arms[0].position.z += newPos * ROT_SPEED * deltaTime * ARM_BONUS;
+        Arms[1].position.z += newPos * ROT_SPEED * deltaTime * ARM_BONUS;
     }
 
 
     // Rodar a cabeça
-    var rot = (head_ror[0] + head_ror[1]) * ROT_SPEED;
+    var rot = (head_ror[0] + head_ror[1]) * ROT_SPEED * deltaTime;
     if (pivotHead.rotation.x +rot <= 0 && pivotHead.rotation.x +rot >= -3) {
         pivotHead.rotation.set(pivotHead.rotation.x + rot,0,0);
     } else if (pivotHead.rotation.x < 0.1 && pivotHead.rotation.x > -0.1) {
         pivotHead.rotation.set(0,0,0);
     }
 
-    rot = (leg_ror[0] + leg_ror[1]) * ROT_SPEED / 2;
+
+    // Rodar pernas
+    rot = (leg_ror[0] + leg_ror[1]) * ROT_SPEED * deltaTime / 2;
     var pos;
     if (Legs[0].rotation.x - rot <= 1.58 &&  Legs[0].rotation.x - rot >= 0) {
         pos = Legs[0].rotation.x - rot;
