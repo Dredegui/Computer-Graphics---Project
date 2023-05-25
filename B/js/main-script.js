@@ -472,11 +472,13 @@ function onKeyDown(e) {
         case 81: // Q
         case 113: // q
             foot_ror[1] = -1;
+            break;
 
 
         case 65: // A
         case 97: //a
             foot_ror[0] = 1;
+            break;
             
 
 
@@ -545,11 +547,13 @@ function onKeyUp(e) {
         case 81: // Q
         case 113: // q
             foot_ror[1] = 0;
+            break;
 
 
         case 65: // A
         case 97: //a
             foot_ror[0] = 0;
+            break;
           
     }
 }
@@ -692,9 +696,9 @@ function animate() {
     if (Foots[0].rotation.x - rot <= 1.58 &&  Foots[0].rotation.x - rot >= 0) {
         pos = Foots[0].rotation.x - rot;
     } else if (1.6 - Foots[0].rotation.x > Foots[0].rotation.x - 0) {
-        pos = Foots[0].rotation.x - rot;       // 0 
+        pos = 0;       // 0 
     } else {
-        pos = Foots[0].rotation.x - rot;       // 1.57 
+        pos = 1.57;       // 1.57 
     }
 
     if (Foots[0].rotation.x < 1.5) {
