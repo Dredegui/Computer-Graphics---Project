@@ -10,7 +10,6 @@ var camera, scene, renderer;
 var cameras = [];
 var geometry, material, mesh;
 
-
 ////////////////////////////////////////////
 /////////         TRAILOR          /////////
 ////////////////////////////////////////////
@@ -24,9 +23,11 @@ var trailor_velZ = [0,0]
 var robot, pivotHead;
 var Arms = [];
 var Legs = [];
+var Foots = [];
 var head_ror = [0,0];
 var leg_ror = [0,0];
 var arm_tr = [0,0];
+var foot_ror = [0,0];
 
 const CUBE = 0;
 const CYLINDER = 1;
@@ -202,6 +203,31 @@ function addArm(obj, x, y, z) {
     Arms.push(Arm);
 }
 
+function addFoot(obj, x, y, z) {
+
+    'use strict';
+
+    var pe = new THREE.Object3D();
+    
+    // TODO add details to pe
+    
+    geometry = new THREE.CubeGeometry(2 * SCALE, 2 * SCALE, 4 * SCALE);
+    material = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe: true });
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(0, -1*SCALE,2 *SCALE);
+    
+    pe.add(mesh);
+    
+    var pivotPe = new THREE.Object3D();
+    pivotPe.position.set(x,y,z);
+    pivotPe.add(mesh);
+    
+    scene.add(pivotPe);
+
+    obj.add(pivotPe);
+    Foots.push(pivotPe);
+}
+
 function addLeg(obj, x, y, z, left) {
 
     'use strict';
@@ -232,6 +258,7 @@ function addLeg(obj, x, y, z, left) {
     addGeneric(pivotLeg, pos * 1.7 * SCALE,-9.5*SCALE,1*SCALE,CYLINDER,0xff0000,1.3,1.3,1.3);
     addGeneric(pivotLeg, pos * 1.7 * SCALE,-6.5*SCALE,1*SCALE,CYLINDER,0xff0000,1.3,1.3,1.3);
     
+    addFoot(pivotLeg,0,-12*SCALE,0);
 
     scene.add(pivotLeg);
 
@@ -434,14 +461,24 @@ function onKeyDown(e) {
             arm_tr[1] = 1;
             break;
 
-        case 65: //A
-        case 97: //a
+        case 54: // 6
             scene.traverse(function (node) {
                 if (node instanceof THREE.Mesh) {
                     node.material.wireframe = !node.material.wireframe;
                 }
             });
             break;
+
+        case 81: // Q
+        case 113: // q
+            foot_ror[1] = -1;
+
+
+        case 65: // A
+        case 97: //a
+            foot_ror[0] = 1;
+            
+
 
         case 83:  //S
         case 115: //s
@@ -504,7 +541,16 @@ function onKeyUp(e) {
         case 115: // s
             leg_ror[1] = 0;
             break;
-    
+
+        case 81: // Q
+        case 113: // q
+            foot_ror[1] = 0;
+
+
+        case 65: // A
+        case 97: //a
+            foot_ror[0] = 0;
+          
     }
 }
 
@@ -637,9 +683,27 @@ function animate() {
         modoCamiao = false;
     }
 
+
     Legs[0].rotation.set(pos,0,0);
     Legs[1].rotation.set(pos,0,0);
+
+    // Rodar pernas
+    rot = (foot_ror[0] + foot_ror[1]) * ROT_SPEED * deltaTime / 2;
+    if (Foots[0].rotation.x - rot <= 1.58 &&  Foots[0].rotation.x - rot >= 0) {
+        pos = Foots[0].rotation.x - rot;
+    } else if (1.6 - Foots[0].rotation.x > Foots[0].rotation.x - 0) {
+        pos = Foots[0].rotation.x - rot;       // 0 
+    } else {
+        pos = Foots[0].rotation.x - rot;       // 1.57 
+    }
+
+    if (Foots[0].rotation.x < 1.5) {
+        modoCamiao = false;
+    }
+
     
+    Foots[0].rotation.set(pos,0,0);
+    Foots[1].rotation.set(pos,0,0);
 
     colisionDetected();
 
