@@ -2,7 +2,7 @@ const SPEED = 1;
 const ROT_SPEED = 0.05;
 const SCALE = 3;
 const ARM_BONUS = 1.7;
-const DEBUG_BOX = true;
+const DEBUG_BOX = false;
 
 ////////////////////////////////////////////
 /////////         BASE          ////////////
@@ -599,32 +599,37 @@ function init() {
 
 function interset() {
 
-    // animation_mode = true;
-
+    
     // ON X 
     if (trailorBoundingBox[1][0] <= robotBoundingBox[0][0]) {
+        animation_mode = true;
         return false;
     }
-
+    
     if (trailorBoundingBox[0][0] >= robotBoundingBox[1][0]) {
+        animation_mode = true;
         return false;
     }
-
+    
     // ON Y 
     if (trailorBoundingBox[1][1] <= robotBoundingBox[0][1]) {
+        animation_mode = true;
         return false;
     }
-
+    
     if (trailorBoundingBox[0][1] >= robotBoundingBox[1][1]) {
+        animation_mode = true;
         return false;
     }
-
+    
     // ON Z 
     if (trailorBoundingBox[1][2] <= robotBoundingBox[0][2]) {
+        animation_mode = true;
         return false;
     }
-
+    
     if (trailorBoundingBox[0][2] >= robotBoundingBox[1][2]) {
+        animation_mode = true;
         return false;
     }
     
@@ -637,10 +642,6 @@ function colisionDetected() {
     if (modoCamiao == false) {
         return false;
     }
-
-    // Perform AABB collision check
-    //trailorBoundingBox = new THREE.Box3().setFromObject(trailor);
-    //robotBoundingBox = new THREE.Box3().setFromObject(robot);
 
     trailorBoundingBox[0] = new Array(trailor.position.x - 4 * SCALE,trailor.position.y - 2 * SCALE, trailor.position.z - 8 * SCALE);
     trailorBoundingBox[1] = new Array(trailor.position.x + 4 * SCALE,trailor.position.y + 7 * SCALE, trailor.position.z + 11 * SCALE);
@@ -685,18 +686,15 @@ function animate() {
     if (colision && animation_mode) {
         var direction = targetPosition.clone().sub(trailor.position).normalize();
         var movement = direction.multiplyScalar(SPEED * deltaTime);
-        movement.x *= 1.6
-        if (movement.z < 0.3) {
-            movement.x *= 3;
-        }
-        movement.z *= 0.2
+        movement.x = (trailor.position.x/20) * SPEED * deltaTime * -1;
+        movement.z = ((trailor.position.z + 51) / 40) * SPEED * deltaTime * -1;
         trailor.position.add(movement);
         colisionDetected();
         render();
         requestAnimationFrame(animate);
 
-        if (trailor.position.x < 0.01  && trailor.position.x > -0.01 &&
-            trailor.position.z < -51  && trailor.position.z > -51.2) {
+        if (trailor.position.x < 0.1  && trailor.position.x > -0.1 &&
+            trailor.position.z < -50  && trailor.position.z > -52) {
             animation_mode = false;
             console.log(direction);
         }
