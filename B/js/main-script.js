@@ -38,8 +38,10 @@ var modoCamiao = false;
 var colision = false;
 var targetPosition = new THREE.Vector3(0, 13, -55);
 
-var trailorBoundingBox;
-var robotBoundingBox;
+var trailorBoundingBox = [];
+var robotBoundingBox = [];
+
+var pressed_6 = false;
 
 function addGeneric(obj,x,y,z,type,color,sx,sy,sz) {
     'use strict';
@@ -76,11 +78,11 @@ function addUpperBody(obj, x, y, z) {
     addGeneric(UpperBody,x,y-3*SCALE,z + 1.5*SCALE,CUBE,0x909090,8, 1, 1);
 
     // GRILL
-    addGeneric(UpperBody,x,y-SCALE * 1.2,z + 2 * SCALE,CUBE,0xF9F9F0,4, 4, 1);
+    addGeneric(UpperBody,x,y-SCALE * 1.2,z + 2 * SCALE,CUBE,0xAAAAAA,4, 4, 1);
 
     // WHEELS
-    addGeneric(UpperBody,x - 3 * SCALE,y - SCALE * 2.1,z + 0.3*SCALE,CYLINDER,0xff0000,1.3,1.3,1.3);
-    addGeneric(UpperBody,x + 3 * SCALE,y - SCALE * 2.1,z + 0.3*SCALE,CYLINDER,0xff0000,1.3,1.3,1.3);
+    addGeneric(UpperBody,x - 3 * SCALE,y - SCALE * 2.1,z + 0.3*SCALE,CYLINDER,0x871239,1.3,1.3,1.3);
+    addGeneric(UpperBody,x + 3 * SCALE,y - SCALE * 2.1,z + 0.3*SCALE,CYLINDER,0x871239,1.3,1.3,1.3);
 
     geometry = new THREE.CubeGeometry(8 * SCALE, 4 * SCALE, 4 * SCALE);
     material = new THREE.MeshBasicMaterial({ color: 0x1b2133, wireframe: true });
@@ -249,14 +251,14 @@ function addLeg(obj, x, y, z, left) {
     pivotLeg.add(mesh);
     
     //Big Leg
-    addGeneric(pivotLeg,0,-8*SCALE,0,CUBE,0x00ff00,2, 8, 2);
+    addGeneric(pivotLeg,0,-8*SCALE,0,CUBE,0x152580,2, 8, 2);
     var pos = 1;
     if (left) {
         pos = -1;
     }
     //Wheels
-    addGeneric(pivotLeg, pos * 1.7 * SCALE,-9.5*SCALE,1*SCALE,CYLINDER,0xff0000,1.3,1.3,1.3);
-    addGeneric(pivotLeg, pos * 1.7 * SCALE,-6.5*SCALE,1*SCALE,CYLINDER,0xff0000,1.3,1.3,1.3);
+    addGeneric(pivotLeg, pos * 1.7 * SCALE,-9.5*SCALE,1*SCALE,CYLINDER,0x871239,1.3,1.3,1.3);
+    addGeneric(pivotLeg, pos * 1.7 * SCALE,-6.5*SCALE,1*SCALE,CYLINDER,0x871239,1.3,1.3,1.3);
     
     addFoot(pivotLeg,0,-12*SCALE,0);
 
@@ -276,7 +278,7 @@ function createTrailer(x, y, z) {
     addGeneric(trailor,0,10,0,CUBE,0x1b2133,7,7,15);
 
     // Connection
-    addGeneric(trailor,0,3,25,CUBE,0x344F24,5,1.67,6);
+    addGeneric(trailor,0,3,25,CUBE,0x666690,5,1.67,6);
 
     // Wheels
     addGeneric(trailor,-8,-1,-15,CYLINDER,0x000000,1.3,1.3,1.3);
@@ -462,9 +464,15 @@ function onKeyDown(e) {
             break;
 
         case 54: // 6
+
+            if (pressed_6) {
+                break;
+            }
+
             scene.traverse(function (node) {
                 if (node instanceof THREE.Mesh) {
                     node.material.wireframe = !node.material.wireframe;
+                    pressed_6 = true;
                 }
             });
             break;
@@ -554,7 +562,10 @@ function onKeyUp(e) {
         case 97: //a
             foot_ror[0] = 0;
             break;
-          
+
+        case 54: // 6
+            pressed_6 = false;
+            break; 
     }
 }
 
@@ -583,6 +594,38 @@ function init() {
 
 }
 
+function interset() {
+
+    // ON X 
+    if (trailorBoundingBox[1][0] <= robotBoundingBox[0][0]) {
+        return false;
+    }
+
+    if (trailorBoundingBox[0][0] >= robotBoundingBox[1][0]) {
+        return false;
+    }
+
+    // ON Y 
+    if (trailorBoundingBox[1][1] <= robotBoundingBox[0][1]) {
+        return false;
+    }
+
+    if (trailorBoundingBox[0][1] >= robotBoundingBox[1][1]) {
+        return false;
+    }
+
+    // ON Z 
+    if (trailorBoundingBox[1][2] <= robotBoundingBox[0][2]) {
+        return false;
+    }
+
+    if (trailorBoundingBox[0][2] >= robotBoundingBox[1][2]) {
+        return false;
+    }
+    
+    return true;
+
+}
 
 function colisionDetected() {
 
@@ -591,8 +634,27 @@ function colisionDetected() {
     }
 
     // Perform AABB collision check
-    trailorBoundingBox = new THREE.Box3().setFromObject(trailor);
-    robotBoundingBox = new THREE.Box3().setFromObject(robot);
+    //trailorBoundingBox = new THREE.Box3().setFromObject(trailor);
+    //robotBoundingBox = new THREE.Box3().setFromObject(robot);
+
+    trailorBoundingBox[0] = new Array(trailor.position.x - 4 * SCALE,trailor.position.y - 4 * SCALE, trailor.position.z - 8 * SCALE);
+    trailorBoundingBox[1] = new Array(trailor.position.x + 4 * SCALE,trailor.position.y + 4 * SCALE, trailor.position.z + 8 * SCALE);
+    robotBoundingBox[0] = new Array(robot.position.x - 4 * SCALE,robot.position.y - 4 * SCALE, robot.position.z - 9 * SCALE);
+    robotBoundingBox[1] = new Array(robot.position.x + 4 * SCALE,robot.position.y + 4 * SCALE, robot.position.z + 4 * SCALE);
+
+    if (interset()) {
+        // Collision detected
+        console.log("Collision occurred between trailor and robot!");
+        colision = true;
+        return true; 
+    }
+    else {
+        // No collision
+        console.log("No collision between trailor and robot.");
+        colision = false;
+        return false;
+    }
+
 
     if (trailorBoundingBox.intersectsBox(robotBoundingBox)) {
         // Collision detected
@@ -657,7 +719,7 @@ function animate() {
     }
 
     // Ver se está em modo camiao
-    if (Arms[0].position.x + (newPos * ROT_SPEED * deltaTime) >= -2 * SCALE) {
+    if (Arms[0].position.x + (newPos * ROT_SPEED * deltaTime) >= -1.9 * SCALE) {
         modoCamiao = false;
     }
 
