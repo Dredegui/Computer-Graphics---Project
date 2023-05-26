@@ -2,6 +2,7 @@ const SPEED = 1;
 const ROT_SPEED = 0.05;
 const SCALE = 3;
 const ARM_BONUS = 1.7;
+const DEBUG_BOX = true;
 
 ////////////////////////////////////////////
 /////////         BASE          ////////////
@@ -42,6 +43,8 @@ var trailorBoundingBox = [];
 var robotBoundingBox = [];
 
 var pressed_6 = false;
+
+var animation_mode = true;
 
 function addGeneric(obj,x,y,z,type,color,sx,sy,sz) {
     'use strict';
@@ -260,7 +263,7 @@ function addLeg(obj, x, y, z, left) {
     addGeneric(pivotLeg, pos * 1.7 * SCALE,-9.5*SCALE,1*SCALE,CYLINDER,0x871239,1.3,1.3,1.3);
     addGeneric(pivotLeg, pos * 1.7 * SCALE,-6.5*SCALE,1*SCALE,CYLINDER,0x871239,1.3,1.3,1.3);
     
-    addFoot(pivotLeg,0,-12*SCALE,0);
+    addFoot(pivotLeg,0,-12*SCALE,SCALE);
 
     scene.add(pivotLeg);
 
@@ -596,6 +599,8 @@ function init() {
 
 function interset() {
 
+    // animation_mode = true;
+
     // ON X 
     if (trailorBoundingBox[1][0] <= robotBoundingBox[0][0]) {
         return false;
@@ -637,10 +642,21 @@ function colisionDetected() {
     //trailorBoundingBox = new THREE.Box3().setFromObject(trailor);
     //robotBoundingBox = new THREE.Box3().setFromObject(robot);
 
-    trailorBoundingBox[0] = new Array(trailor.position.x - 4 * SCALE,trailor.position.y - 4 * SCALE, trailor.position.z - 8 * SCALE);
-    trailorBoundingBox[1] = new Array(trailor.position.x + 4 * SCALE,trailor.position.y + 4 * SCALE, trailor.position.z + 8 * SCALE);
-    robotBoundingBox[0] = new Array(robot.position.x - 4 * SCALE,robot.position.y - 4 * SCALE, robot.position.z - 9 * SCALE);
-    robotBoundingBox[1] = new Array(robot.position.x + 4 * SCALE,robot.position.y + 4 * SCALE, robot.position.z + 4 * SCALE);
+    trailorBoundingBox[0] = new Array(trailor.position.x - 4 * SCALE,trailor.position.y - 2 * SCALE, trailor.position.z - 8 * SCALE);
+    trailorBoundingBox[1] = new Array(trailor.position.x + 4 * SCALE,trailor.position.y + 7 * SCALE, trailor.position.z + 11 * SCALE);
+    robotBoundingBox[0] = new Array(robot.position.x - 4 * SCALE,robot.position.y - 1 * SCALE, robot.position.z - 16 * SCALE);
+    robotBoundingBox[1] = new Array(robot.position.x + 4 * SCALE,robot.position.y + 6 * SCALE, robot.position.z + 3 * SCALE);
+
+    if (DEBUG_BOX) {
+        var obj = new THREE.Object3D();
+        addGeneric(obj,trailor.position.x - 4 * SCALE,trailor.position.y - 2 * SCALE, trailor.position.z - 8 * SCALE,CUBE,0xff0000,1,1,1)
+        addGeneric(obj,trailor.position.x + 4 * SCALE,trailor.position.y + 7 * SCALE, trailor.position.z + 11 * SCALE,CUBE,0xff0000,1,1,1)
+        addGeneric(obj,robot.position.x - 4 * SCALE,robot.position.y - 1 * SCALE, robot.position.z - 16 * SCALE,CUBE,0xff0000,1,1,1)
+        addGeneric(obj,robot.position.x + 4 * SCALE,robot.position.y + 6 * SCALE, robot.position.z + 3 * SCALE,CUBE,0xff0000,1,1,1)
+    }
+
+
+    scene.add(obj);
 
     if (interset()) {
         // Collision detected
@@ -649,19 +665,6 @@ function colisionDetected() {
         return true; 
     }
     else {
-        // No collision
-        console.log("No collision between trailor and robot.");
-        colision = false;
-        return false;
-    }
-
-
-    if (trailorBoundingBox.intersectsBox(robotBoundingBox)) {
-        // Collision detected
-        console.log("Collision occurred between trailor and robot!");
-        colision = true;
-        return true;
-    } else {
         // No collision
         console.log("No collision between trailor and robot.");
         colision = false;
@@ -679,7 +682,7 @@ function animate() {
 
     modoCamiao = true;
 
-    if (colision) {
+    if (colision && animation_mode) {
         var direction = targetPosition.clone().sub(trailor.position).normalize();
         var movement = direction.multiplyScalar(SPEED * deltaTime);
         movement.x *= 1.6
@@ -691,10 +694,15 @@ function animate() {
         colisionDetected();
         render();
         requestAnimationFrame(animate);
+
+        if (trailor.position.x < 0.01  && trailor.position.x > -0.01 &&
+            trailor.position.z < -51  && trailor.position.z > -51.2) {
+            animation_mode = false;
+            console.log(direction);
+        }
+
         return ; 
     }
-
-
 
     // Movimentar o reboque
     var newX = trailor_velX[0] + trailor_velX[1];
