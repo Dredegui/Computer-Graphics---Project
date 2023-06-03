@@ -1,6 +1,8 @@
 //////////////////////
 /* CONSTANTS DUDEERS*/
 //////////////////////
+const SCALE_OVNI = 5;
+
 const PHONG = 0;
 const TOON = 1;
 const LAMBERT = 2;
@@ -14,6 +16,7 @@ var camera, scene, renderer;
 var geometry,material,mesh;
 
 var moon,moonLight;
+var ovni;
 
 var selectedMaterial = BASIC;
 var keys = [];
@@ -56,6 +59,8 @@ function createCamera(x,y,z) {
 const CUBE = 0; 
 const CYLINDER = 1;
 const SPHERE = 2;
+const ELLIPSOIDE = 3;
+const CAP = 4;
 
 function createMaterials(newColor) {
     materials.push([new THREE.MeshPhongMaterial({ color: newColor }),new THREE.MeshToonMaterial({ color: newColor }),
@@ -86,6 +91,33 @@ function addGeneric(obj,x,y,z,type,color,sx,sy,sz) {
         obj.add(mesh);
     }
 
+    if (type == ELLIPSOIDE) {
+        geometry = new THREE.SphereGeometry(sx, 32, 32);
+
+        const positionAttribute = geometry.getAttribute('position');
+        const positions = positionAttribute.array;
+
+        for (let i = 0; i < positions.length; i+= 3) {
+            positions[i] *= sx / sz;
+            positions[i+1] *= sy / sz;
+        }
+
+        positionAttribute.needsUpdate = true;
+
+        material = materials[materials.length-1][selectedMaterial];
+        mesh = new THREE.Mesh(geometry, material);
+        mesh.position.set(x,y,z);
+        obj.add(mesh);
+    }
+
+    if (type == CAP) {
+        geometry = new THREE.SphereGeometry(sx, 32, 32,0,Math.PI * 2,-1.57,3);
+        material = materials[materials.length-1][selectedMaterial];
+        mesh = new THREE.Mesh(geometry, material);
+        mesh.position.set(x,y,z);
+        obj.add(mesh);
+    }
+
     if (type == SPHERE) {
         geometry = new THREE.SphereGeometry(sx, 32, 32);
         material = materials[materials.length-1][selectedMaterial];
@@ -93,20 +125,28 @@ function addGeneric(obj,x,y,z,type,color,sx,sy,sz) {
         mesh.position.set(x,y,z);
         obj.add(mesh);
     }
+
     meshs.push(mesh);
 }
 
 function createMoon() {
     var moon = new THREE.Object3D();
-    addGeneric(moon,0,100,-200,SPHERE,0xffA500,10,0,0);
+    addGeneric(moon,100,0,0,SPHERE,0xffA500,10,3,3);
     moonLight = new THREE.DirectionalLight(0xffff00,1);
-    const dir = new THREE.Vector3(1,1,-1);
-    dir.normalize();
-    moonLight.position.set(0,0,0);
-    moonLight.target.position.set(dir.x,dir.y,dir.z);
-    moonLight.target.updateMatrixWorld();
+    moonLight.position.set(50,1,1);
+    moonLight.target = ovni;
+    //moonLight.target.updateMatrixWorld();
     moon.add(moonLight);
+    const lightHelper = new THREE.DirectionalLightHelper(moonLight,1);
+    moon.add(lightHelper);
     scene.add(moon);
+}
+
+function createOVNI() {
+    ovni = new THREE.Object3D();
+    addGeneric(ovni,-100,0,0,ELLIPSOIDE,0x808080,10*SCALE_OVNI,2*SCALE_OVNI,10*SCALE_OVNI);
+    addGeneric(ovni,-100,0,0,CAP,0x808080,7*SCALE_OVNI,-1,-1);
+    scene.add(ovni);
 }
 
 //////////////////////
@@ -186,20 +226,21 @@ function init() {
     document.body.appendChild(renderer.domElement);
 
     createScene();
-
+    createOVNI();
     createMoon();
 
+    
 
     camera = createCamera(200,200,200);
 
 
-
     // Adicionar uma luz ambiente para iluminar a cena como um todo
-    const ambientLight = new THREE.AmbientLight(0x404040);
-    scene.add(ambientLight);
+    //const ambientLight = new THREE.AmbientLight(0x404040);
+    //scene.add(ambientLight);
 
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("resize", onResize);
 }
 
 function checkMoon() {
@@ -231,7 +272,6 @@ function animate() {
     if (checkMaterials()) {
         changeMaterials();
     }
-
     'use strict';
     // Render the scene
     render();
