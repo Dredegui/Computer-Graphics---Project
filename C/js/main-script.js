@@ -2,6 +2,9 @@
 /* CONSTANTS DUDEERS*/
 //////////////////////
 const SCALE_OVNI = 5;
+const SPEED_OVNI = 5;
+const SPHERES_OVNI = 20;
+const SPHERES_DIST_OVNI = 6;
 
 const PHONG = 0;
 const TOON = 1;
@@ -131,21 +134,29 @@ function addGeneric(obj,x,y,z,type,color,sx,sy,sz) {
 
 function createMoon() {
     var moon = new THREE.Object3D();
-    addGeneric(moon,100,0,0,SPHERE,0xffA500,10,3,3);
-    moonLight = new THREE.DirectionalLight(0xffff00,1);
-    moonLight.position.set(50,1,1);
-    moonLight.target = ovni;
-    //moonLight.target.updateMatrixWorld();
+    addGeneric(moon,100,150,0,SPHERE,0xffA500,10,3,3);
+    moonLight = new THREE.DirectionalLight(0xA0A000,2);
+    moonLight.position.set(100,150,0);
+    moonLight.target.position.set(1,-1,1);
+    moonLight.target.updateMatrixWorld();
     moon.add(moonLight);
     const lightHelper = new THREE.DirectionalLightHelper(moonLight,1);
     moon.add(lightHelper);
     scene.add(moon);
 }
 
-function createOVNI() {
+function createOVNI(x,y,z) {
     ovni = new THREE.Object3D();
-    addGeneric(ovni,-100,0,0,ELLIPSOIDE,0x808080,10*SCALE_OVNI,2*SCALE_OVNI,10*SCALE_OVNI);
-    addGeneric(ovni,-100,0,0,CAP,0x808080,7*SCALE_OVNI,-1,-1);
+    addGeneric(ovni,x,y,z,ELLIPSOIDE,0x808080,10*SCALE_OVNI,2*SCALE_OVNI,10*SCALE_OVNI);
+    addGeneric(ovni,x,y,z,CAP,0xA0A0A0,7*SCALE_OVNI,-1,-1);
+
+    for (let i = 0; i < SPHERES_OVNI; i++) {
+        const angle = (i / SPHERES_OVNI) * Math.PI * 2;
+        const angx = Math.cos(angle) * SCALE_OVNI * SPHERES_DIST_OVNI;
+        const angz = Math.sin(angle) * SCALE_OVNI * SPHERES_DIST_OVNI;
+        addGeneric(ovni,x + angx,y - SCALE_OVNI,z + angz,SPHERE,0xff0000,5,-1,-1);
+    }
+
     scene.add(ovni);
 }
 
@@ -226,17 +237,17 @@ function init() {
     document.body.appendChild(renderer.domElement);
 
     createScene();
-    createOVNI();
+    createOVNI(-100,0,0);
     createMoon();
 
     
 
-    camera = createCamera(200,200,200);
+    camera = createCamera(200,-200,200);
 
 
     // Adicionar uma luz ambiente para iluminar a cena como um todo
-    //const ambientLight = new THREE.AmbientLight(0x404040);
-    //scene.add(ambientLight);
+    const ambientLight = new THREE.AmbientLight(0xA0A0A0);
+         scene.add(ambientLight);
 
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
@@ -255,6 +266,30 @@ function checkMoon() {
     }
 }
 
+function moveOVNI() {
+    var move_X = 0;
+    var move_Z = 0;
+    if (keys[37]) {
+        move_X -= 1;
+    }
+    if (keys[39]) {
+        move_X += 1;
+    }
+    if (keys[38]) {
+        move_Z -= 1;
+    }
+    if (keys[40]) {
+        move_Z += 1;
+    }
+    if (move_X != 0 && move_Z != 0) {
+        move_X = move_X / Math.sqrt(2);
+        move_Z = move_Z / Math.sqrt(2);
+    }
+    ovni.position.x += move_X * SPEED_OVNI;
+    ovni.position.z += move_Z * SPEED_OVNI;
+    
+}
+
 /////////////////////
 /* ANIMATION CYCLE */
 /////////////////////
@@ -268,6 +303,7 @@ function changeMaterials() {
 function animate() {
 
     checkMoon();
+    moveOVNI();
 
     if (checkMaterials()) {
         changeMaterials();
