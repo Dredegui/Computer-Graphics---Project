@@ -1,27 +1,39 @@
 //////////////////////
 /* CONSTANTS DUDEERS*/
 //////////////////////
-const SCALE_OVNI = 10;
+
+const MOON_LIGHT_INTENSITY = 10;
+
+const SCALE_OVNI = 5;
 const SPEED_OVNI = 5;
 const SPHERES_OVNI = 10;
-const SPHERES_DIST_OVNI = 6;
+const SPHERES_DIST_OVNI = 5;
+const OVNI_POINT_LIGHT_INTENSITY = 30;
+const OVNI_ROTATION_SPEED = 0.01;
 
 const PHONG = 0;
 const TOON = 1;
 const LAMBERT = 2;
 const BASIC = 3;
 
-const MAT_MOON = 0;
 //////////////////////
 /* GLOBAL VARIABLES */
 //////////////////////
+
+// Work variables
 var camera, scene, renderer;
 var geometry,material,mesh;
 
+// Moon variables
 var moon,moonLight;
-var ovni;
 
+// Ovni variables 
+var ovni;
+var ovni_pointLights = [];
+var spotLight;
+// Default material
 var selectedMaterial = BASIC;
+
 var keys = [];
 var pressed = [];
 var materials = [];
@@ -77,7 +89,7 @@ function addGeneric(obj,x,y,z,type,color,sx,sy,sz) {
     createMaterials(color);
 
     if (type == CUBE) {
-        geometry = new THREE.CubeGeometry(SCALE * sx,SCALE * sy, SCALE * sz);
+        geometry = new THREE.CubeGeometry(sx,sy,sz);
         material = materials[materials.length-1][selectedMaterial];
         mesh = new THREE.Mesh(geometry, material);
         mesh.position.set(x, y, z);
@@ -85,12 +97,10 @@ function addGeneric(obj,x,y,z,type,color,sx,sy,sz) {
     }
 
     if (type == CYLINDER) {
-        geometry = new THREE.CylinderGeometry(SCALE * sx,SCALE * sy, SCALE * sz, 16);
+        geometry = new THREE.CylinderGeometry(sx,sy,sz, 16);
         material = materials[materials.length-1][selectedMaterial];
         mesh = new THREE.Mesh(geometry, material);
-        // Rotate 90º
-        mesh.rotation.z = 1.57;
-        mesh.position.set(x, y-3, z);
+        mesh.position.set(x, y, z);
         obj.add(mesh);
     }
 
@@ -135,7 +145,7 @@ function addGeneric(obj,x,y,z,type,color,sx,sy,sz) {
 function createMoon() {
     var moon = new THREE.Object3D();
     addGeneric(moon,100,150,0,SPHERE,0xffA500,10,3,3);
-    moonLight = new THREE.DirectionalLight(0xA0A000,1);
+    moonLight = new THREE.DirectionalLight(0xA0A000,MOON_LIGHT_INTENSITY);
     moonLight.position.set(100,150,0);
     moonLight.target.position.set(1,-1,1);
     moonLight.target.updateMatrixWorld();
@@ -147,21 +157,33 @@ function createMoon() {
 
 function createOVNI(x,y,z) {
     ovni = new THREE.Object3D();
-    addGeneric(ovni,x,y,z,ELLIPSOIDE,0x808080,10*SCALE_OVNI,2*SCALE_OVNI,10*SCALE_OVNI);
-    addGeneric(ovni,x,y,z,CAP,0xA0A0A0,7*SCALE_OVNI,-1,-1);
+    addGeneric(ovni,0,0,0,ELLIPSOIDE,0x808080,10*SCALE_OVNI,2*SCALE_OVNI,10*SCALE_OVNI);
+    addGeneric(ovni,0,0,0,CAP,0xA0A0A0,7*SCALE_OVNI,-1,-1);
+    addGeneric(ovni,0,- 2.2 * SCALE_OVNI,0,CYLINDER,0xAFAFF3,7*SPHERES_DIST_OVNI, 4*SPHERES_DIST_OVNI, 1.5*SCALE_OVNI);
+
+    // Add spotlight to the cylinder
+    spotLight = new THREE.SpotLight(0xffffff, 5);
+    spotLight.position.set(0,-3*SCALE_OVNI,0);
+    spotLight.target.position.set(0,-10*SCALE_OVNI, 0);
+    spotLight.target.updateMatrixWorld();
+    const spotlightHelper = new THREE.SpotLightHelper(spotLight);
+    scene.add(spotlightHelper);
+    scene.add(spotLight);
 
     for (let i = 0; i < SPHERES_OVNI; i++) {
         const angle = (i / SPHERES_OVNI) * Math.PI * 2;
         const angx = Math.cos(angle) * SCALE_OVNI * SPHERES_DIST_OVNI;
         const angz = Math.sin(angle) * SCALE_OVNI * SPHERES_DIST_OVNI;
-        addGeneric(ovni,x + angx,y - SCALE_OVNI*1.5,z + angz,SPHERE,0xC00070,SCALE_OVNI,-1,-1);
+        addGeneric(ovni,angx,-1.6*SCALE_OVNI*1.5,angz,SPHERE,0xC00070,SCALE_OVNI * 0.8,-1,-1);
 
-        // Add a point light to each sphere
-        const pointLight = new THREE.PointLight(0xC00070, 30, SCALE_OVNI * 5);
-        pointLight.position.set(x + angx*1.2, y - SCALE_OVNI * 4, z + angz*1.2);
+        const pointLight = new THREE.PointLight(0xC00070, OVNI_POINT_LIGHT_INTENSITY, SCALE_OVNI * 5);
+        pointLight.position.set(angx*1.2, -SCALE_OVNI * 4, angz*1.2);
         ovni.add(pointLight);
-
+        ovni_pointLights.push(pointLight);
     }
+
+
+    ovni.position.set(x,y,z);
 
     scene.add(ovni);
 }
@@ -243,17 +265,15 @@ function init() {
     document.body.appendChild(renderer.domElement);
 
     createScene();
-    createOVNI(-100,0,0);
+    createOVNI(0,0,0);
     createMoon();
 
-    
-
-    camera = createCamera(200,-200,200);
+    camera = createCamera(200,0,200);
 
 
     // Adicionar uma luz ambiente para iluminar a cena como um todo
     const ambientLight = new THREE.AmbientLight(0xA0A0A0);
-         scene.add(ambientLight);
+    scene.add(ambientLight);
 
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
@@ -266,9 +286,37 @@ function checkMoon() {
             moonLight.intensity = 0;
         }
         else {
-            moonLight.intensity = 1;
+            moonLight.intensity = MOON_LIGHT_INTENSITY;
         }
         pressed[68] = true;
+    }
+}
+
+function checkOvniPointLights() {
+    if (keys[80] && !pressed[80]) {
+        if (ovni_pointLights[0].intensity) {
+            for (let i = 0; i < ovni_pointLights.length; i++) {
+                ovni_pointLights[i].intensity = 0;
+            }
+        }
+        else {
+            for (let i = 0; i < ovni_pointLights.length; i++) {
+                ovni_pointLights[i].intensity = OVNI_POINT_LIGHT_INTENSITY;
+            }
+        }
+        pressed[80] = true;
+    }
+}
+
+function checkOvniSpotLight() {
+    if (keys[83] && !pressed[83]) {
+        if (spotLight.intensity) {
+            spotLight.intensity = 0;
+        }
+        else {
+            spotLight.intensity = 1;
+        }
+        pressed[83] = true;
     }
 }
 
@@ -293,7 +341,11 @@ function moveOVNI() {
     }
     ovni.position.x += move_X * SPEED_OVNI;
     ovni.position.z += move_Z * SPEED_OVNI;
-    
+
+    spotLight.position.x = ovni.position.x;
+    spotLight.position.z = ovni.position.z;
+
+    ovni.rotation.y += OVNI_ROTATION_SPEED;
 }
 
 /////////////////////
@@ -309,6 +361,8 @@ function changeMaterials() {
 function animate() {
 
     checkMoon();
+    checkOvniPointLights(); 
+    checkOvniSpotLight();
     moveOVNI();
 
     if (checkMaterials()) {
@@ -325,7 +379,6 @@ function animate() {
 ////////////////////////////
 function onResize() { 
     'use strict';
-
 }
 
 ///////////////////////
