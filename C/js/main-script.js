@@ -1,9 +1,9 @@
 //////////////////////
 /* CONSTANTS DUDEERS*/
 //////////////////////
-const SCALE_OVNI = 5;
+const SCALE_OVNI = 10;
 const SPEED_OVNI = 5;
-const SPHERES_OVNI = 20;
+const SPHERES_OVNI = 10;
 const SPHERES_DIST_OVNI = 6;
 
 const PHONG = 0;
@@ -135,7 +135,7 @@ function addGeneric(obj,x,y,z,type,color,sx,sy,sz) {
 function createMoon() {
     var moon = new THREE.Object3D();
     addGeneric(moon,100,150,0,SPHERE,0xffA500,10,3,3);
-    moonLight = new THREE.DirectionalLight(0xA0A000,2);
+    moonLight = new THREE.DirectionalLight(0xA0A000,1);
     moonLight.position.set(100,150,0);
     moonLight.target.position.set(1,-1,1);
     moonLight.target.updateMatrixWorld();
@@ -154,7 +154,13 @@ function createOVNI(x,y,z) {
         const angle = (i / SPHERES_OVNI) * Math.PI * 2;
         const angx = Math.cos(angle) * SCALE_OVNI * SPHERES_DIST_OVNI;
         const angz = Math.sin(angle) * SCALE_OVNI * SPHERES_DIST_OVNI;
-        addGeneric(ovni,x + angx,y - SCALE_OVNI,z + angz,SPHERE,0xff0000,5,-1,-1);
+        addGeneric(ovni,x + angx,y - SCALE_OVNI*1.5,z + angz,SPHERE,0xC00070,SCALE_OVNI,-1,-1);
+
+        // Add a point light to each sphere
+        const pointLight = new THREE.PointLight(0xC00070, 30, SCALE_OVNI * 5);
+        pointLight.position.set(x + angx*1.2, y - SCALE_OVNI * 4, z + angz*1.2);
+        ovni.add(pointLight);
+
     }
 
     scene.add(ovni);
