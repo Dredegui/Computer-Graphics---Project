@@ -2,7 +2,7 @@
 /* CONSTANTS DUDEERS*/
 //////////////////////
 
-const MOON_LIGHT_INTENSITY = 10;
+const MOON_LIGHT_INTENSITY = 1;
 
 const SCALE_OVNI = 5;
 const SPEED_OVNI = 5;
@@ -140,13 +140,14 @@ function addGeneric(obj,x,y,z,type,color,sx,sy,sz) {
     }
 
     meshs.push(mesh);
+    return mesh;
 }
 
 function createMoon() {
     var moon = new THREE.Object3D();
-    addGeneric(moon,100,150,0,SPHERE,0xffA500,10,3,3);
+    addGeneric(moon,100,200,0,SPHERE,0xffA500,10,3,3);
     moonLight = new THREE.DirectionalLight(0xA0A000,MOON_LIGHT_INTENSITY);
-    moonLight.position.set(100,150,0);
+    moonLight.position.set(100,200,0);
     moonLight.target.position.set(1,-1,1);
     moonLight.target.updateMatrixWorld();
     moon.add(moonLight);
@@ -154,6 +155,22 @@ function createMoon() {
     moon.add(lightHelper);
     scene.add(moon);
 }
+
+function createTree(x,y,z) {
+    var tree = new THREE.Object3D();
+
+    addGeneric(tree,0,0,0,CYLINDER,0x993333,5,5,40);
+    var side_branch = addGeneric(tree,-5,3,0,CYLINDER,0x993333,3,3,20);
+    side_branch.rotation.z = Math.PI / 4;
+
+    addGeneric(tree,0,30,0,ELLIPSOIDE,0x00B020,30,10,30);
+    addGeneric(tree,-15,13,0,ELLIPSOIDE,0x00B020,15,5,15);
+    
+    tree.position.set(x,y,z);
+
+    scene.add(tree);
+}
+
 
 function createOVNI(x,y,z) {
     ovni = new THREE.Object3D();
@@ -163,7 +180,7 @@ function createOVNI(x,y,z) {
 
     // Add spotlight to the cylinder
     spotLight = new THREE.SpotLight(0xffffff, 5);
-    spotLight.position.set(0,-3*SCALE_OVNI,0);
+    spotLight.position.set(0,-3*SCALE_OVNI+y,0);
     spotLight.target.position.set(0,-10*SCALE_OVNI, 0);
     spotLight.target.updateMatrixWorld();
     const spotlightHelper = new THREE.SpotLightHelper(spotLight);
@@ -256,8 +273,29 @@ function initKeys() {
     }
 }
 
+function createSkydome() {
+        // Create a sphere geometry
+        var geometry = new THREE.SphereGeometry(700, 32, 32,0,Math.PI * 2,-1.57,3);
+
+        // Load the sky texture
+        var textureLoader = new THREE.TextureLoader();
+        var texture = textureLoader.load('https://raw.githubusercontent.com/JoseCutileiro/ImageLinks/master/free-sky-texture.jpg');
+    
+        // Apply the texture to the material
+        var material = new THREE.MeshBasicMaterial({ map: texture, side: THREE.BackSide });
+    
+        // Create the skydome mesh
+        var skydome = new THREE.Mesh(geometry, material);
+
+        skydome.position.set(0,-100,0);
+
+        // Add the skydome to your scene
+        scene.add(skydome);
+}
+
 function init() {
     'use strict';
+
     renderer = new THREE.WebGLRenderer({
         antialias: true
     });
@@ -265,11 +303,17 @@ function init() {
     document.body.appendChild(renderer.domElement);
 
     createScene();
-    createOVNI(0,0,0);
+
+    createSkydome();
+
+    createOVNI(0,100,0);
+    createTree(100,0,-100);
+    createTree(0,10,-50);
+    createTree(0,20,100);
+
     createMoon();
 
-    camera = createCamera(200,0,200);
-
+    camera = createCamera(200,50,200);
 
     // Adicionar uma luz ambiente para iluminar a cena como um todo
     const ambientLight = new THREE.AmbientLight(0xA0A0A0);
