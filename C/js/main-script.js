@@ -6,7 +6,7 @@ const MOON_LIGHT_INTENSITY = 1;
 
 const SCALE_OVNI = 5;
 const SPEED_OVNI = 5;
-const SPHERES_OVNI = 10;
+const SPHERES_OVNI = 4;
 const SPHERES_DIST_OVNI = 5;
 const OVNI_POINT_LIGHT_INTENSITY = 30;
 const OVNI_ROTATION_SPEED = 0.01;
@@ -178,14 +178,18 @@ function createOVNI(x,y,z) {
     addGeneric(ovni,0,0,0,CAP,0xA0A0A0,7*SCALE_OVNI,-1,-1);
     addGeneric(ovni,0,- 2.2 * SCALE_OVNI,0,CYLINDER,0xAFAFF3,7*SPHERES_DIST_OVNI, 4*SPHERES_DIST_OVNI, 1.5*SCALE_OVNI);
 
+    // Create target
+    var target = new THREE.Object3D();
+    target.position.set(0,0,0);
+
     // Add spotlight to the cylinder
     spotLight = new THREE.SpotLight(0xffffff, 5);
     spotLight.position.set(0,-3*SCALE_OVNI+y,0);
-    spotLight.target.position.set(0,-10*SCALE_OVNI, 0);
-    spotLight.target.updateMatrixWorld();
+    spotLight.target = target;
     const spotlightHelper = new THREE.SpotLightHelper(spotLight);
     scene.add(spotlightHelper);
-    scene.add(spotLight);
+    ovni.add(spotLight);
+    ovni.add(target);
 
     for (let i = 0; i < SPHERES_OVNI; i++) {
         const angle = (i / SPHERES_OVNI) * Math.PI * 2;
@@ -385,9 +389,6 @@ function moveOVNI() {
     }
     ovni.position.x += move_X * SPEED_OVNI;
     ovni.position.z += move_Z * SPEED_OVNI;
-
-    spotLight.position.x = ovni.position.x;
-    spotLight.position.z = ovni.position.z;
 
     ovni.rotation.y += OVNI_ROTATION_SPEED;
 }
