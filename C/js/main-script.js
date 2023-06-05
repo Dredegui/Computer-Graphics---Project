@@ -1,7 +1,7 @@
 //////////////////////
 /* CONSTANTS DUDEERS*/
 //////////////////////
-
+const NUM_TREES = 10;
 const MOON_LIGHT_INTENSITY = 1;
 
 const SCALE_OVNI = 5;
@@ -9,6 +9,7 @@ const SPEED_OVNI = 5;
 const SPHERES_OVNI = 4;
 const SPHERES_DIST_OVNI = 5;
 const OVNI_POINT_LIGHT_INTENSITY = 30;
+const OVNI_SPOT_LIGHT_INTENSITY = 0.5;
 const OVNI_ROTATION_SPEED = 0.01;
 
 const PHONG = 0;
@@ -171,6 +172,12 @@ function createTree(x,y,z) {
     scene.add(tree);
 }
 
+function spawnTrees(){
+    for (var i = 0; i < NUM_TREES; i++) {
+        createTree(Math.random() * 500 - 100,Math.random() * 20 - 10,Math.random() * 500 - 100);
+    }
+}
+
 
 function createOVNI(x,y,z) {
     ovni = new THREE.Object3D();
@@ -180,11 +187,11 @@ function createOVNI(x,y,z) {
 
     // Create target
     var target = new THREE.Object3D();
-    target.position.set(0,0,0);
+    target.position.set(0,-4*SCALE_OVNI,0);
 
     // Add spotlight to the cylinder
-    spotLight = new THREE.SpotLight(0xffffff, 5);
-    spotLight.position.set(0,-3*SCALE_OVNI+y,0);
+    spotLight = new THREE.SpotLight(0xffffff, OVNI_SPOT_LIGHT_INTENSITY);
+    spotLight.position.set(0,-2*SCALE_OVNI,0);
     spotLight.target = target;
     const spotlightHelper = new THREE.SpotLightHelper(spotLight);
     scene.add(spotlightHelper);
@@ -297,6 +304,125 @@ function createSkydome() {
         scene.add(skydome);
 }
 
+function createGround() {
+    const groundGeo = new THREE.PlaneGeometry(1700, 1700, 100, 100);
+    let disMap = new THREE.TextureLoader().load('https://raw.githubusercontent.com/JoseCutileiro/ImageLinks/master/cg/heightmap.png');
+    disMap.wrapS = disMap.wrapT = THREE.RepeatWrapping;
+    // disMap.repeat.set(sliders.horTexture, sliders.vertTexture);
+    const groundMat = new THREE.MeshPhongMaterial({
+        color: 0xffffff,
+        displacementMap: disMap,
+        displacementScale: 500,
+        displacementBias: -150,
+    });
+    const groundMesh = new THREE.Mesh(groundGeo, groundMat);
+    scene.add(groundMesh);
+    groundMesh.rotation.x = -Math.PI / 2;
+    groundMesh.rotation.y = 0;
+}
+
+function createBufferGeometry(tx,ty,tz,sx,sy,sz,color) {
+    const geometry = new THREE.BufferGeometry();
+    var vertices = [
+        // Front face
+        -1, -1, 1,
+        1, -1, 1,
+        1, 1, 1,
+        -1, 1, 1,
+        // Back face
+        -1, -1, -1,
+        1, -1, -1,
+        1, 1, -1,
+        -1, 1, -1
+    ];
+    var indices = [
+        // Front face
+        0, 1, 2,
+        2, 3, 0,
+        // Back face
+        4, 5, 6,
+        6, 7, 4,
+        // Top face
+        3, 2, 6,
+        6, 7, 3,
+        // Bottom face
+        0, 1, 5,
+        5, 4, 0,
+        // Left face
+        0, 3, 7,
+        7, 4, 0,
+        // Right face
+        1, 2, 6,
+        6, 5, 1
+    ];
+}
+
+function createHouse() {
+    const geometry = new THREE.BufferGeometry();
+    var vertices = [
+        // Front face
+        -1, -1, 1,
+        1, -1, 1,
+        1, 1, 1,
+        -1, 1, 1,
+        // Back face
+        -1, -1, -1,
+        1, -1, -1,
+        1, 1, -1,
+        -1, 1, -1
+    ];
+    var indices = [
+        // Front face
+        0, 1, 2,
+        2, 3, 0,
+        // Back face
+        4, 5, 6,
+        6, 7, 4,
+        // Top face
+        3, 2, 6,
+        6, 7, 3,
+        // Bottom face
+        0, 1, 5,
+        5, 4, 0,
+        // Left face
+        0, 3, 7,
+        7, 4, 0,
+        // Right face
+        1, 2, 6,
+        6, 5, 1
+    ];
+
+    var scale_x = 50; // Scale factor
+    var scale_y = 50; // Scale factor
+    var scale_z = 100; // Scale factor
+    var shift_x = -200;
+    var shift_y = 0;
+    var shift_z = -200;
+
+
+    // Multiply each vertex by the scale factor
+    for (var i = 0; i < vertices.length; i += 3) {
+        vertices[i] *= scale_x;
+        vertices[i + 1] *= scale_y;
+        vertices[i + 2] *= scale_z;
+
+        vertices[i] += shift_x;
+        vertices[i + 1] += shift_y;
+        vertices[i + 2] += shift_z;
+
+    }
+
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+    geometry.setIndex(indices);
+
+    geometry.computeVertexNormals();
+
+    const material = new THREE.MeshPhongMaterial({ color: 0xffffff });
+
+    const mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+}
+
 function init() {
     'use strict';
 
@@ -310,17 +436,20 @@ function init() {
 
     createSkydome();
 
+    //createGround();
+
     createOVNI(0,100,0);
-    createTree(100,0,-100);
-    createTree(0,10,-50);
-    createTree(0,20,100);
+   
+    spawnTrees();
+
+    createHouse();
 
     createMoon();
 
-    camera = createCamera(200,50,200);
+    camera = createCamera(200,200,200);
 
     // Adicionar uma luz ambiente para iluminar a cena como um todo
-    const ambientLight = new THREE.AmbientLight(0xA0A0A0);
+    const ambientLight = new THREE.AmbientLight(0xA0A0A0,0.5);
     scene.add(ambientLight);
 
     window.addEventListener("keydown", onKeyDown);
@@ -362,7 +491,7 @@ function checkOvniSpotLight() {
             spotLight.intensity = 0;
         }
         else {
-            spotLight.intensity = 1;
+            spotLight.intensity = OVNI_SPOT_LIGHT_INTENSITY;
         }
         pressed[83] = true;
     }
