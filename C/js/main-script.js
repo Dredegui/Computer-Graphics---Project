@@ -40,6 +40,8 @@ var pressed = [];
 var materials = [];
 var meshs = [];
 
+var controls;
+
 /////////////////////
 /* CREATE SCENE(S) */
 /////////////////////
@@ -313,7 +315,7 @@ function createGround() {
         color: 0xffffff,
         displacementMap: disMap,
         displacementScale: 500,
-        displacementBias: -150,
+        displacementBias: -200,
     });
     const groundMesh = new THREE.Mesh(groundGeo, groundMat);
     scene.add(groundMesh);
@@ -321,7 +323,7 @@ function createGround() {
     groundMesh.rotation.y = 0;
 }
 
-function createBufferGeometry(tx,ty,tz,sx,sy,sz,color) {
+function createBufferGeometry(tx,ty,tz,sx,sy,sz,color,rx,ry,rz) {
     const geometry = new THREE.BufferGeometry();
     var vertices = [
         // Front face
@@ -340,8 +342,8 @@ function createBufferGeometry(tx,ty,tz,sx,sy,sz,color) {
         0, 1, 2,
         2, 3, 0,
         // Back face
-        4, 5, 6,
-        6, 7, 4,
+        6, 5, 4,
+        4, 7, 6,
         // Top face
         3, 2, 6,
         6, 7, 3,
@@ -352,64 +354,19 @@ function createBufferGeometry(tx,ty,tz,sx,sy,sz,color) {
         0, 3, 7,
         7, 4, 0,
         // Right face
-        1, 2, 6,
-        6, 5, 1
-    ];
-}
-
-function createHouse() {
-    const geometry = new THREE.BufferGeometry();
-    var vertices = [
-        // Front face
-        -1, -1, 1,
-        1, -1, 1,
-        1, 1, 1,
-        -1, 1, 1,
-        // Back face
-        -1, -1, -1,
-        1, -1, -1,
-        1, 1, -1,
-        -1, 1, -1
-    ];
-    var indices = [
-        // Front face
-        0, 1, 2,
-        2, 3, 0,
-        // Back face
-        4, 5, 6,
-        6, 7, 4,
-        // Top face
-        3, 2, 6,
-        6, 7, 3,
-        // Bottom face
-        0, 1, 5,
-        5, 4, 0,
-        // Left face
-        0, 3, 7,
-        7, 4, 0,
-        // Right face
-        1, 2, 6,
-        6, 5, 1
+        6, 2, 1,
+        1, 5, 6
     ];
 
-    var scale_x = 50; // Scale factor
-    var scale_y = 50; // Scale factor
-    var scale_z = 100; // Scale factor
-    var shift_x = -200;
-    var shift_y = 0;
-    var shift_z = -200;
-
+    var scale_x = sx; // Scale factor
+    var scale_y = sy; // Scale factor
+    var scale_z = sz; // Scale factor
 
     // Multiply each vertex by the scale factor
     for (var i = 0; i < vertices.length; i += 3) {
         vertices[i] *= scale_x;
         vertices[i + 1] *= scale_y;
         vertices[i + 2] *= scale_z;
-
-        vertices[i] += shift_x;
-        vertices[i + 1] += shift_y;
-        vertices[i + 2] += shift_z;
-
     }
 
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
@@ -417,10 +374,32 @@ function createHouse() {
 
     geometry.computeVertexNormals();
 
-    const material = new THREE.MeshPhongMaterial({ color: 0xffffff });
+    const material = new THREE.MeshPhongMaterial({ color: color });
 
     const mesh = new THREE.Mesh(geometry, material);
     scene.add(mesh);
+
+    rx /= 57.2957795;
+    ry /= 57.2957795;
+    rz /= 57.2957795;
+
+    mesh.rotation.set(rx,ry,rz);
+    mesh.position.set(tx,ty,tz);
+
+    return mesh;
+}
+
+function createHouse() {
+    // HOUSE
+    createBufferGeometry(-200,0,-100,100,50,50,0x808020,0,90,0);
+
+    // DOOR
+    createBufferGeometry(-150,-20,-100,10,25,1,0x0000ff,0,90,0);
+
+    // WINDOWS
+    createBufferGeometry(-150,20,-150,20,12,1,0xffffff,0,90,0);
+    createBufferGeometry(-150,20,-50,20,12,1,0xffffff,0,90,0);
+    createBufferGeometry(-200,20,0,1,12,20,0xffffff,0,90,0);
 }
 
 function init() {
@@ -436,7 +415,7 @@ function init() {
 
     createSkydome();
 
-    //createGround();
+    createGround();
 
     createOVNI(0,100,0);
    
@@ -455,6 +434,18 @@ function init() {
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
     window.addEventListener("resize", onResize);
+
+    // Create an instance of OrbitControls
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+    // Enable damping for smooth rotation
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+
+    // Set the initial position and target of the controls
+    controls.target.set(0, 0, 0);
+    controls.update();
+
 }
 
 function checkMoon() {
@@ -546,6 +537,9 @@ function animate() {
     // Render the scene
     render();
     requestAnimationFrame(animate);
+
+    // Update the controls
+    controls.update();
 }
 
 ////////////////////////////
