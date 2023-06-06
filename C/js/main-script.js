@@ -1,8 +1,8 @@
 //////////////////////
 /* CONSTANTS DUDEERS*/
 //////////////////////
-const NUM_TREES = 10;
-const MOON_LIGHT_INTENSITY = 1;
+const NUM_TREES = 200;
+const MOON_LIGHT_INTENSITY = 0.4;
 
 const SCALE_OVNI = 5;
 const SPEED_OVNI = 5;
@@ -83,7 +83,6 @@ const CAP = 4;
 function createMaterials(newColor) {
     materials.push([new THREE.MeshPhongMaterial({ color: newColor }),new THREE.MeshToonMaterial({ color: newColor }),
         new THREE.MeshLambertMaterial({ color: newColor }),new THREE.MeshBasicMaterial({color: newColor})]);
-    console.log(materials);
 }
 
 function addGeneric(obj,x,y,z,type,color,sx,sy,sz) {
@@ -160,6 +159,14 @@ function createMoon() {
 }
 
 function createTree(x,y,z) {
+
+    // Dont spawn on 0,0,0
+    while(Math.abs(x) < 150 || Math.abs(z) < 150) {
+        x *= Math.random() * 2 + 1;
+        z *= Math.random() * 2 + 1 ;
+    }
+
+
     var tree = new THREE.Object3D();
 
     addGeneric(tree,0,0,0,CYLINDER,0x993333,5,5,40);
@@ -170,13 +177,14 @@ function createTree(x,y,z) {
     addGeneric(tree,-15,13,0,ELLIPSOIDE,0x00B020,15,5,15);
     
     tree.position.set(x,y,z);
+    tree.rotation.set(0,Math.random() * 7,0);
 
     scene.add(tree);
 }
 
 function spawnTrees(){
     for (var i = 0; i < NUM_TREES; i++) {
-        createTree(Math.random() * 500 - 100,Math.random() * 20 - 10,Math.random() * 500 - 100);
+        createTree(Math.random() * 2000 - 1000,Math.random() * 20 - 10,Math.random() * 2000 - 1000);
     }
 }
 
@@ -230,7 +238,6 @@ function checkCollisions(){
 ///////////////////////
 function handleCollisions(){
     'use strict';
-
 }
 
 ////////////
@@ -288,7 +295,7 @@ function initKeys() {
 
 function createSkydome() {
         // Create a sphere geometry
-        var geometry = new THREE.SphereGeometry(700, 32, 32,0,Math.PI * 2,-1.57,3);
+        var geometry = new THREE.SphereGeometry(700, 32, 32,0,Math.PI * 2,0,Math.PI/2);
 
         // Load the sky texture
         var textureLoader = new THREE.TextureLoader();
@@ -311,11 +318,11 @@ function createGround() {
     let disMap = new THREE.TextureLoader().load('https://raw.githubusercontent.com/JoseCutileiro/ImageLinks/master/cg/heightmap.png');
     disMap.wrapS = disMap.wrapT = THREE.RepeatWrapping;
     // disMap.repeat.set(sliders.horTexture, sliders.vertTexture);
-    const groundMat = new THREE.MeshPhongMaterial({
+    const groundMat = new THREE.MeshStandardMaterial({
         color: 0xffffff,
         displacementMap: disMap,
         displacementScale: 500,
-        displacementBias: -200,
+        displacementBias: -150,
     });
     const groundMesh = new THREE.Mesh(groundGeo, groundMat);
     scene.add(groundMesh);
@@ -323,83 +330,145 @@ function createGround() {
     groundMesh.rotation.y = 0;
 }
 
-function createBufferGeometry(tx,ty,tz,sx,sy,sz,color,rx,ry,rz) {
+function roof() {
     const geometry = new THREE.BufferGeometry();
     var vertices = [
-        // Front face
-        -1, -1, 1,
-        1, -1, 1,
-        1, 1, 1,
-        -1, 1, 1,
-        // Back face
-        -1, -1, -1,
-        1, -1, -1,
-        1, 1, -1,
-        -1, 1, -1
+        // Front vert
+        -100, 0, -100,
+        -100, 0, 100,
+        -100, 100, -100,
+        -100,100, 100,
+
+        // SIDE LEFT
+        100, 0, -100,       
+        100,100, -100,      // 5
+
+        // SIDE RIGHT
+        100, 0, 100,
+        100,100, 100,
+
+        // CIMA DOOR
+        100,75,-100,
+        100,75,100,       
+
+        // wall 1 l
+        100,0,-75,           // 10
+        100,75,-75,
+
+        // wall 1 r
+        100,0,75,
+        100,75,75,
+
+        100,75,-50,        
+        100,50,-50,             // 15
+
+        100,75,50,
+        100,50,50,
+
+        100,50,-75,
+        100,0,-25,
+        100,50,-25,
+
+        
+        100,50,75,
+        100,0,25,
+        100,50,25
+
+
     ];
     var indices = [
         // Front face
-        0, 1, 2,
-        2, 3, 0,
-        // Back face
-        6, 5, 4,
-        4, 7, 6,
-        // Top face
-        3, 2, 6,
-        6, 7, 3,
-        // Bottom face
-        0, 1, 5,
-        5, 4, 0,
-        // Left face
-        0, 3, 7,
-        7, 4, 0,
-        // Right face
-        6, 2, 1,
-        1, 5, 6
+        0,1,2,
+        1,3,2,
+
+        // SIDE L
+        2,4,0,
+        2,5,4,
+
+        // SIDE 5
+        1,6,7,
+        7,3,1,
+
+        // SIDE DOOR
+        7,9,8,
+        8,5,7,
+
+        11,10,4,
+        4,8,11,
+
+        6,12,13,
+        13,9,6,
+
+        16,17,15,
+        15,14,16,
+
+        20,19,10,
+        10,18,20,
+
+        12,22,23,
+        23,21,12
+
     ];
-
-    var scale_x = sx; // Scale factor
-    var scale_y = sy; // Scale factor
-    var scale_z = sz; // Scale factor
-
-    // Multiply each vertex by the scale factor
-    for (var i = 0; i < vertices.length; i += 3) {
-        vertices[i] *= scale_x;
-        vertices[i + 1] *= scale_y;
-        vertices[i + 2] *= scale_z;
-    }
 
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
     geometry.setIndex(indices);
 
     geometry.computeVertexNormals();
 
-    const material = new THREE.MeshPhongMaterial({ color: color });
+    const material = new THREE.MeshPhongMaterial({ color: 0xffffff });
 
     const mesh = new THREE.Mesh(geometry, material);
     scene.add(mesh);
+    return mesh;
+}
 
-    rx /= 57.2957795;
-    ry /= 57.2957795;
-    rz /= 57.2957795;
+function createBufferGeometry() {
+    const geometry = new THREE.BufferGeometry();
+    var vertices = [
+        // Front vert
+        -100,100,-100,
+        -100,100,100,
+        100,100,-100,
+        100,100,100,
 
-    mesh.rotation.set(rx,ry,rz);
-    mesh.position.set(tx,ty,tz);
+        0,200,0,
 
+
+    ];
+    var indices = [
+        // Front face
+        0,1,4,
+        4,2,0,
+        3,4,1,
+        3,2,4
+    ];
+
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+    geometry.setIndex(indices);
+
+    geometry.computeVertexNormals();
+
+    const material = new THREE.MeshPhongMaterial({ color: 0xffAA88 });
+
+    const mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
     return mesh;
 }
 
 function createHouse() {
+    
     // HOUSE
-    createBufferGeometry(-200,0,-100,100,50,50,0x808020,0,90,0);
+    createBufferGeometry();
+    roof();
+
 
     // DOOR
-    createBufferGeometry(-150,-20,-100,10,25,1,0x0000ff,0,90,0);
+    //createBufferGeometry(-150,-20,-100,10,25,1,0x0000ff,0,90,0);
 
     // WINDOWS
-    createBufferGeometry(-150,20,-150,20,12,1,0xffffff,0,90,0);
-    createBufferGeometry(-150,20,-50,20,12,1,0xffffff,0,90,0);
-    createBufferGeometry(-200,20,0,1,12,20,0xffffff,0,90,0);
+    //createBufferGeometry(-150,20,-150,20,12,1,0xffffff,0,90,0);
+    //createBufferGeometry(-150,20,-50,20,12,1,0xffffff,0,90,0);
+    //createBufferGeometry(-200,20,0,1,12,20,0xffffff,0,90,0);
 }
 
 function init() {
@@ -417,18 +486,18 @@ function init() {
 
     createGround();
 
-    createOVNI(0,100,0);
-   
+    createOVNI(0,200,0);
+
     spawnTrees();
 
     createHouse();
 
     createMoon();
 
-    camera = createCamera(200,200,200);
+    camera = createCamera(200,400,200);
 
     // Adicionar uma luz ambiente para iluminar a cena como um todo
-    const ambientLight = new THREE.AmbientLight(0xA0A0A0,0.5);
+    const ambientLight = new THREE.AmbientLight(0xA0A0A0,0.2);
     scene.add(ambientLight);
 
     window.addEventListener("keydown", onKeyDown);
@@ -554,7 +623,6 @@ function onResize() {
 ///////////////////////
 function onKeyDown(e) {
     'use strict';
-    console.log(e.keyCode);
     keys[e.keyCode] = true;
 }
 
