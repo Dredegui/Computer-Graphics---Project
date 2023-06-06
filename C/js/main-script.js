@@ -22,6 +22,8 @@ const BASIC = 3;
 //////////////////////
 
 // Work variables
+var groundMat, groundMesh, skyMat;
+// Work variables
 var camera, scene, renderer;
 var geometry,material,mesh;
 
@@ -293,16 +295,47 @@ function initKeys() {
     }
 }
 
+function createSkyTexture() {
+    // Generate the procedural texture
+    const textureSize = 512;
+    const canvas = document.createElement("canvas");
+    canvas.width = textureSize;
+    canvas.height = textureSize;
+    const context = canvas.getContext("2d");
+
+    const gradient = context.createLinearGradient(0, 0, 0, textureSize);
+    gradient.addColorStop(0, '#00008B'); // Blue color
+    gradient.addColorStop(0.8, '#00008B'); // Blue color
+    gradient.addColorStop(1, '#9400D3'); // Purple color
+  
+    const dotColors = ["#ffffff"];
+
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, textureSize, textureSize);
+
+    const dotSize = 1;
+    const numDots = 1500;
+
+    for (let i = 0; i < numDots; i++) {
+      const x = Math.random() * textureSize;
+      const y = Math.random() * textureSize;
+      const color = dotColors[Math.floor(Math.random() * dotColors.length)];
+
+      context.fillStyle = color;
+      context.fillRect(x, y, dotSize, dotSize);
+    }
+
+    const texture = new THREE.Texture(canvas);
+    texture.needsUpdate = true;
+    return texture;
+}
+
 function createSkydome() {
         // Create a sphere geometry
         var geometry = new THREE.SphereGeometry(700, 32, 32,0,Math.PI * 2,0,Math.PI/2);
 
-        // Load the sky texture
-        var textureLoader = new THREE.TextureLoader();
-        var texture = textureLoader.load('https://raw.githubusercontent.com/JoseCutileiro/ImageLinks/master/free-sky-texture.jpg');
-    
         // Apply the texture to the material
-        var material = new THREE.MeshBasicMaterial({ map: texture, side: THREE.BackSide });
+        var material = new THREE.MeshBasicMaterial({ side: THREE.BackSide });
     
         // Create the skydome mesh
         var skydome = new THREE.Mesh(geometry, material);
@@ -313,13 +346,43 @@ function createSkydome() {
         scene.add(skydome);
 }
 
+function createFloorTexture() {
+    // Generate the procedural texture
+    const textureSize = 512;
+    const canvas = document.createElement("canvas");
+    canvas.width = textureSize;
+    canvas.height = textureSize;
+    const context = canvas.getContext("2d");
+
+    const bgColor = "#90EE90";
+    const dotColors = ["#ffffff", "#ffff00", "#e066ff", "#00a1ff"];
+
+    context.fillStyle = bgColor;
+    context.fillRect(0, 0, textureSize, textureSize);
+
+    const dotSize = 2;
+    const numDots = 1000;
+
+    for (let i = 0; i < numDots; i++) {
+      const x = Math.random() * textureSize;
+      const y = Math.random() * textureSize;
+      const color = dotColors[Math.floor(Math.random() * dotColors.length)];
+
+      context.fillStyle = color;
+      context.fillRect(x, y, dotSize, dotSize);
+    }
+
+    const texture = new THREE.Texture(canvas);
+    texture.needsUpdate = true;
+    return texture;
+}
+
 function createGround() {
     const groundGeo = new THREE.PlaneGeometry(1700, 1700, 100, 100);
     let disMap = new THREE.TextureLoader().load('https://raw.githubusercontent.com/JoseCutileiro/ImageLinks/master/cg/heightmap.png');
     disMap.wrapS = disMap.wrapT = THREE.RepeatWrapping;
     // disMap.repeat.set(sliders.horTexture, sliders.vertTexture);
     const groundMat = new THREE.MeshStandardMaterial({
-        color: 0xffffff,
         displacementMap: disMap,
         displacementScale: 500,
         displacementBias: -150,
@@ -517,6 +580,19 @@ function init() {
 
 }
 
+function checkTextures() {
+    if (keys[49] && !pressed[49]) {
+        groundMat.map = createFloorTexture();
+        groundMat.needsUpdate = true;
+        pressed[49] = true;
+    }
+    if (keys[50] && !pressed[50]) {
+        skyMat.map = createSkyTexture();
+        skyMat.needsUpdate = true;
+        pressed[50] = true;
+    }
+}
+
 function checkMoon() {
     if (keys[68] && !pressed[68]) {
         if (moonLight.intensity) {
@@ -595,6 +671,7 @@ function changeMaterials() {
 function animate() {
 
     checkMoon();
+    checkTextures();
     checkOvniPointLights(); 
     checkOvniSpotLight();
     moveOVNI();
