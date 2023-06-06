@@ -68,6 +68,8 @@ function createCamera(x,y,z) {
     cam.position.y = y;
     cam.position.z = z;
     cam.lookAt(scene.position);
+
+
     return cam;
 }
 
@@ -332,13 +334,13 @@ function createSkyTexture() {
 
 function createSkydome() {
         // Create a sphere geometry
-        var geometry = new THREE.SphereGeometry(700, 32, 32,0,Math.PI * 2,0,Math.PI/2);
+        var geometry = new THREE.SphereGeometry(600, 32, 32,0,Math.PI * 2,0,Math.PI/2);
 
         // Apply the texture to the material
-        var material = new THREE.MeshBasicMaterial({ side: THREE.BackSide });
+        skyMat = new THREE.MeshBasicMaterial({ side: THREE.BackSide });
     
         // Create the skydome mesh
-        var skydome = new THREE.Mesh(geometry, material);
+        var skydome = new THREE.Mesh(geometry,skyMat);
 
         skydome.position.set(0,-100,0);
 
@@ -382,12 +384,12 @@ function createGround() {
     let disMap = new THREE.TextureLoader().load('https://raw.githubusercontent.com/JoseCutileiro/ImageLinks/master/cg/heightmap.png');
     disMap.wrapS = disMap.wrapT = THREE.RepeatWrapping;
     // disMap.repeat.set(sliders.horTexture, sliders.vertTexture);
-    const groundMat = new THREE.MeshStandardMaterial({
+    groundMat = new THREE.MeshStandardMaterial({
         displacementMap: disMap,
         displacementScale: 500,
         displacementBias: -150,
     });
-    const groundMesh = new THREE.Mesh(groundGeo, groundMat);
+    groundMesh = new THREE.Mesh(groundGeo, groundMat);
     scene.add(groundMesh);
     groundMesh.rotation.x = -Math.PI / 2;
     groundMesh.rotation.y = 0;
