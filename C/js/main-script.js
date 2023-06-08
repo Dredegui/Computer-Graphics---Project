@@ -1,8 +1,11 @@
 //////////////////////
 /* CONSTANTS DUDEERS*/
 //////////////////////
+
+DEBUG = false;
+
 const NUM_TREES = 200;
-const MOON_LIGHT_INTENSITY = 0.4;
+const MOON_LIGHT_INTENSITY = 0.3;
 
 const SCALE_OVNI = 5;
 const SPEED_OVNI = 5;
@@ -51,8 +54,6 @@ function createScene() {
     'use strict';
 
     scene = new THREE.Scene();
-
-    //scene.add(new THREE.AxisHelper(10));
     scene.background = new THREE.Color( 0x000000 );
 }
 
@@ -151,14 +152,25 @@ function addGeneric(obj,x,y,z,type,color,sx,sy,sz) {
 
 function createMoon() {
     var moon = new THREE.Object3D();
-    addGeneric(moon,100,200,0,SPHERE,0xffA500,10,3,3);
-    moonLight = new THREE.DirectionalLight(0xA0A000,MOON_LIGHT_INTENSITY);
-    moonLight.position.set(100,200,0);
-    moonLight.target.position.set(1,-1,1);
+    addGeneric(moon,-300,300,-200,SPHERE,0xffBB00,50,3,3);
+
+
+    moonLight = new THREE.DirectionalLight(0xffbb00,MOON_LIGHT_INTENSITY);
+    moonLight.position.set(-300,300,-200);
+
+    var obj = new THREE.Object3D();
+    obj.position.set(1,-1,1);
+    
+    moonLight.target.position = obj.position;
     moonLight.target.updateMatrixWorld();
+    scene.add(obj);
     moon.add(moonLight);
-    const lightHelper = new THREE.DirectionalLightHelper(moonLight,1);
-    moon.add(lightHelper);
+
+    if (DEBUG) {
+        const lightHelper = new THREE.DirectionalLightHelper(moonLight,1);
+        moon.add(lightHelper);
+    }
+
     scene.add(moon);
 }
 
@@ -174,7 +186,7 @@ function createTree(x,y,z) {
     var tree = new THREE.Object3D();
 
     addGeneric(tree,0,0,0,CYLINDER,0x993333,5,5,40);
-    var side_branch = addGeneric(tree,-5,3,0,CYLINDER,0x993333,3,3,20);
+    var side_branch = addGeneric(tree,-5,3,0,CYLINDER,0xa14d1a,3,3,20);
     side_branch.rotation.z = Math.PI / 4;
 
     addGeneric(tree,0,30,0,ELLIPSOIDE,0x00B020,30,10,30);
@@ -207,8 +219,11 @@ function createOVNI(x,y,z) {
     spotLight = new THREE.SpotLight(0xffffff, OVNI_SPOT_LIGHT_INTENSITY);
     spotLight.position.set(0,-2*SCALE_OVNI,0);
     spotLight.target = target;
-    const spotlightHelper = new THREE.SpotLightHelper(spotLight);
-    scene.add(spotlightHelper);
+    if (DEBUG) {
+        const spotlightHelper = new THREE.SpotLightHelper(spotLight);
+        scene.add(spotlightHelper);
+    }
+
     ovni.add(spotLight);
     ovni.add(target);
 
@@ -337,7 +352,7 @@ function createSkydome() {
         var geometry = new THREE.SphereGeometry(600, 32, 32,0,Math.PI * 2,0,Math.PI/2);
 
         // Apply the texture to the material
-        skyMat = new THREE.MeshBasicMaterial({ side: THREE.BackSide });
+        skyMat = new THREE.MeshPhongMaterial({ side: THREE.BackSide});
     
         // Create the skydome mesh
         var skydome = new THREE.Mesh(geometry,skyMat);
@@ -384,10 +399,10 @@ function createGround() {
     let disMap = new THREE.TextureLoader().load('https://raw.githubusercontent.com/JoseCutileiro/ImageLinks/master/cg/heightmap.png');
     disMap.wrapS = disMap.wrapT = THREE.RepeatWrapping;
     // disMap.repeat.set(sliders.horTexture, sliders.vertTexture);
-    groundMat = new THREE.MeshStandardMaterial({
+    groundMat = new THREE.MeshPhongMaterial({
         displacementMap: disMap,
         displacementScale: 500,
-        displacementBias: -150,
+        displacementBias: -140,
     });
     groundMesh = new THREE.Mesh(groundGeo, groundMat);
     scene.add(groundMesh);
@@ -395,7 +410,11 @@ function createGround() {
     groundMesh.rotation.y = 0;
 }
 
-function roof() {
+function createBufferGeometry() {
+
+
+    createMaterials(0xffffff);
+
     const geometry = new THREE.BufferGeometry();
     var vertices = [
         // Front vert
@@ -432,7 +451,7 @@ function roof() {
 
         100,50,-75,
         100,0,-25,
-        100,50,-25,
+        100,50,-25,             // 20
 
         
         100,50,75,
@@ -455,17 +474,17 @@ function roof() {
         7,3,1,
 
         // SIDE DOOR
-        7,9,8,
-        8,5,7,
+        8,5,9,
+        9,5,7,
 
-        11,10,4,
-        4,8,11,
+        4,8,10,
+        10,8,11,
 
-        6,12,13,
-        13,9,6,
+        12,9,6,
+        13,9,12,
 
-        16,17,15,
         15,14,16,
+        16,17,15,
 
         20,19,10,
         10,18,20,
@@ -480,14 +499,20 @@ function roof() {
 
     geometry.computeVertexNormals();
 
-    const material = new THREE.MeshPhongMaterial({ color: 0xffffff });
+    material = materials[materials.length-1][selectedMaterial];
 
     const mesh = new THREE.Mesh(geometry, material);
+
+    meshs.push(mesh);
+
     scene.add(mesh);
     return mesh;
 }
 
-function createBufferGeometry() {
+function roof() {
+
+    createMaterials(0xeb8334);
+
     const geometry = new THREE.BufferGeometry();
     var vertices = [
         // Front vert
@@ -496,9 +521,7 @@ function createBufferGeometry() {
         100,100,-100,
         100,100,100,
 
-        0,200,0,
-
-
+        0,150,0,
     ];
     var indices = [
         // Front face
@@ -513,9 +536,81 @@ function createBufferGeometry() {
 
     geometry.computeVertexNormals();
 
-    const material = new THREE.MeshPhongMaterial({ color: 0xffAA88 });
+    material = materials[materials.length-1][selectedMaterial];
 
     const mesh = new THREE.Mesh(geometry, material);
+
+    meshs.push(mesh);
+    scene.add(mesh);
+    return mesh;
+}
+
+function door() {
+
+    createMaterials(0x0000ff);
+
+    const geometry = new THREE.BufferGeometry();
+    var vertices = [
+        100,0,-25,
+        100,50,-25,
+        100,0,25,
+        100,50,25
+
+    ];
+    var indices = [
+        // Front face
+        0,1,2,
+        3,2,1 
+    ];
+
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+    geometry.setIndex(indices);
+
+    geometry.computeVertexNormals();
+
+    material = materials[materials.length-1][selectedMaterial];
+
+    const mesh = new THREE.Mesh(geometry, material);
+
+    meshs.push(mesh);
+    scene.add(mesh);
+    return mesh;
+}
+
+function window_Buffer() {
+
+    createMaterials(0x0000ff);
+
+    const geometry = new THREE.BufferGeometry();
+    var vertices = [
+        100,75,-75,
+        100,75,-50,        
+        100,50,-50,
+        100,50,-75, 
+        100,75,75,
+        100,75,50,        
+        100,50,50,
+        100,50,75, 
+    ];
+    var indices = [
+        // Front face
+        0,1,3,
+        1,2,3,
+
+        7,5,4,
+        7,6,5,
+    ];
+
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+    geometry.setIndex(indices);
+
+    geometry.computeVertexNormals();
+
+    material = materials[materials.length-1][selectedMaterial];
+
+    const mesh = new THREE.Mesh(geometry, material);
+
+    meshs.push(mesh);
     scene.add(mesh);
     return mesh;
 }
@@ -525,7 +620,8 @@ function createHouse() {
     // HOUSE
     createBufferGeometry();
     roof();
-
+    door();
+    window_Buffer();
 
     // DOOR
     //createBufferGeometry(-150,-20,-100,10,25,1,0x0000ff,0,90,0);
@@ -544,6 +640,14 @@ function init() {
     });
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
+    document.body.appendChild( VRButton.createButton( renderer ) );
+    renderer.xr.enabled = true;
+
+    renderer.setAnimationLoop( function () {
+
+        renderer.render( scene, camera );
+    
+    } );
 
     createScene();
 
