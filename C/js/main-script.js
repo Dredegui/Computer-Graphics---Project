@@ -45,7 +45,12 @@ var pressed = [];
 var materials = [];
 var meshs = [];
 
+// Orbit controls
 var controls;
+
+// time 
+var previousTime = 0;
+var deltaTime = 0; 
 
 /////////////////////
 /* CREATE SCENE(S) */
@@ -758,10 +763,10 @@ function moveOVNI() {
         move_X = move_X / Math.sqrt(2);
         move_Z = move_Z / Math.sqrt(2);
     }
-    ovni.position.x += move_X * SPEED_OVNI;
-    ovni.position.z += move_Z * SPEED_OVNI;
+    ovni.position.x += move_X * SPEED_OVNI * deltaTime;
+    ovni.position.z += move_Z * SPEED_OVNI * deltaTime;
 
-    ovni.rotation.y += OVNI_ROTATION_SPEED;
+    ovni.rotation.y += OVNI_ROTATION_SPEED * deltaTime;
 }
 
 /////////////////////
@@ -775,6 +780,12 @@ function changeMaterials() {
 }
 
 function animate() {
+    'use strict';
+
+    // Calculate delta time
+    var currentTime = performance.now();
+    deltaTime = (currentTime - previousTime) / 10;
+    previousTime = currentTime;
 
     checkMoon();
     checkTextures();
