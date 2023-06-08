@@ -9,7 +9,7 @@ const MOON_LIGHT_INTENSITY = 0.3;
 
 const SCALE_OVNI = 5;
 const SPEED_OVNI = 5;
-const SPHERES_OVNI = 4;
+const SPHERES_OVNI = 6;
 const SPHERES_DIST_OVNI = 5;
 const OVNI_POINT_LIGHT_INTENSITY = 30;
 const OVNI_SPOT_LIGHT_INTENSITY = 0.5;
@@ -797,8 +797,16 @@ function animate() {
 ////////////////////////////
 /* RESIZE WINDOW CALLBACK */
 ////////////////////////////
-function onResize() { 
+function onResize() {
     'use strict';
+
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    if (window.innerHeight > 0 && window.innerWidth > 0) {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+    }
+
 }
 
 ///////////////////////
