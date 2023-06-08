@@ -3,6 +3,7 @@
 //////////////////////
 
 DEBUG = false;
+ORBIT = false;
 
 const NUM_TREES = 200;
 const MOON_LIGHT_INTENSITY = 0.3;
@@ -648,11 +649,7 @@ function init() {
     document.body.appendChild( VRButton.createButton( renderer ) );
     renderer.xr.enabled = true;
 
-    renderer.setAnimationLoop( function () {
-
-        renderer.render( scene, camera );
-    
-    } );
+    renderer.setAnimationLoop(animate);
 
     createScene();
 
@@ -660,15 +657,16 @@ function init() {
 
     createGround();
 
-    createOVNI(0,200,0);
+    createOVNI(200,200,-200);
 
     spawnTrees();
 
     createHouse();
 
     createMoon();
-
-    camera = createCamera(200,400,200);
+    camera = createCamera(300,400,300);
+    camera.lookAt(0,300,0);
+    camera.position.set(300,100,300);
 
     // Adicionar uma luz ambiente para iluminar a cena como um todo
     const ambientLight = new THREE.AmbientLight(0xA0A0A0,0.2);
@@ -679,15 +677,18 @@ function init() {
     window.addEventListener("resize", onResize);
 
     // Create an instance of OrbitControls
-    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    if (ORBIT) {
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
 
-    // Enable damping for smooth rotation
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
+        // Enable damping for smooth rotation
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+    
+        // Set the initial position and target of the controls
+        controls.target.set(0, 0, 0);
+        controls.update();
+    }
 
-    // Set the initial position and target of the controls
-    controls.target.set(0, 0, 0);
-    controls.update();
 
 }
 
@@ -799,10 +800,13 @@ function animate() {
     'use strict';
     // Render the scene
     render();
-    requestAnimationFrame(animate);
+    //requestAnimationFrame(animate);
 
     // Update the controls
-    controls.update();
+    if (ORBIT) {
+        controls.update();
+    }
+    
 }
 
 ////////////////////////////
